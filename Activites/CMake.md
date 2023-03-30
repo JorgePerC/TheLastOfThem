@@ -5,11 +5,11 @@ Make easier to compile complex projects
 
 On the low level, it calls for gcc, cxx...
 
-
-## Make file:
-
-    cmake
-* Crea el archivo de comfiguración *Makefile*
+    Note: 
+        ccmake ..
+        # Was design to automate all this
+        cmake-gui
+        # Graphical interface for configuring CMakeFiles
 
 ## Steps:
  1. Have the following directory structure: ![folderStructure](https://miro.medium.com/v2/resize:fit:319/1*dAo2jf6-a-KH1VQBg1hsoA.png)
@@ -18,9 +18,13 @@ On the low level, it calls for gcc, cxx...
         
         nano CMakeLists.txt
 
- 1. Create make config file
+ 1. Move into the build directory. This because it's a good practice to keep the output files in there
+
+        cd build
+
+ 1. Create make config files *Makefile, CMakeFiles/, CMakeCache.txt*
     
-        cmake project/buildDir
+        cmake ../Path/to/project
 
  1. Build project
     
