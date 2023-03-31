@@ -2,6 +2,7 @@
 
 Make easier to compile complex projects 
 
+This helped me: [Cmake Playlist](https://youtube.com/playlist?list=PLK6MXr8gasrGmIiSuVQXpfFuE1uPT615s)
 
 On the low level, it calls for gcc, cxx...
 
@@ -10,9 +11,13 @@ On the low level, it calls for gcc, cxx...
         # Was design to automate all this
         cmake-gui
         # Graphical interface for configuring CMakeFiles
+        ldd binName
+        # Shows linking dependencies for the exe
 
 ## Steps:
- 1. Have the following directory structure: ![folderStructure](https://miro.medium.com/v2/resize:fit:319/1*dAo2jf6-a-KH1VQBg1hsoA.png)
+ 1. Have the following directory structure: 
+    
+    ![folderStructure](https://miro.medium.com/v2/resize:fit:319/1*dAo2jf6-a-KH1VQBg1hsoA.png)
 
  1. Configure your CMakeLists.txt file
         
@@ -68,3 +73,33 @@ Create variables for the compilation project
         include
         ${varName}$
     )
+
+-------
+## Libraries functions:
+
+### add_library()
+
+Tells cmake which files should be threated as libraries. I'm not sure if the order really matters. 
+
+    add_library(
+        libName # SHARED ## This would indicate to dynamically link
+        file1.hpp
+        file1.cpp
+    )
+
+**STATIC:** Static linking (default). mylib.so is the output file for this kind of library. *YOU SHALL NAME IT LIKE lib%.so*
+
+**SHARED:** Dynamic linking
+
+**MODULE:** Hydrid between static and dynamic linking
+
+### target_link_libraries()
+
+Once we have the libraries and the executables declared, we use this command. Indicates the sources and libraries
+
+    target_link_directories(
+        binName PRIVATE libName
+        # Use PRIVATE -> 
+    )
+
+### include_directories ()
