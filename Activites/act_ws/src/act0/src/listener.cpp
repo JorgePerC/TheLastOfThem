@@ -5,7 +5,7 @@
 
 
 void callback_chatter(const std_msgs::Int64 &msg){
-    ROS_INFO("I heard: [%s]", msg->data.);
+    ROS_INFO("I heard: [%s]", msg.data);
 }
 
 int main(int argc, char* argv[])
