@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     image_transport::Publisher img_pub = it.advertise("/camera/rgb", 1);
 
     // Convierte entre imagen de ROS y Np matrix
-    cv_bridge::CvImage cv_bridge;
+    cv_bridge::CvImage cv_b;
 
     // Video capture (camera object)
     cv::VideoCapture camIn;
@@ -48,14 +48,14 @@ int main(int argc, char* argv[])
         cv::resize(img, img, cv::Size(640,480));
 
         // Automacally converts the image to ROS msg
-        cv_bridge.image = img;
+        cv_b.image = img;
 
-        cv_bridge.header.stamp = ros::Time::now();
+        cv_b.header.stamp = ros::Time::now();
         
-        cv_bridge.encoding = sensor_msgs::image_encodings::BGR8;
+        cv_b.encoding = sensor_msgs::image_encodings::BGR8;
     
         // This is format independent, based on the one we declared. 
-        img_pub.publish(cv_bridge.toImageMsg());
+        img_pub.publish(cv_b.toImageMsg());
 
         ros::spinOnce();
         loop_rate.sleep();

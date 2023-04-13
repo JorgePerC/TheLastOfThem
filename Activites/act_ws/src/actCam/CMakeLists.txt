@@ -112,6 +112,15 @@ target_link_libraries( camPush
   ${OpenCV_LIBS}
 )
 
+add_executable( camSubs
+  src/cameraSubscriber.cpp
+)
+
+target_link_libraries( camSubs
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure

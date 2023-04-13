@@ -17,21 +17,23 @@
 #include <sensor_msgs/image_encodings.h>
 
 // Convierte entre imagen de ROS y Np matrix
-cv_bridge::CvImage cv_bridge;
+cv_bridge::CvImage cv_b;
 image_transport::Publisher img_pub;
 
 void actionUponImage(const sensor_msgs::ImageConstPtr &msg)
 {
     cv:: Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
 
-    cv_bridge.image = image;
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
-    cv_bridge.header.stamp = ros::Time::now();
+    cv_b.image = image;
+
+    cv_b.header.stamp = ros::Time::now();
     
-    cv_bridge.encoding = sensor_msgs::image_encodings::BGR8;
+    cv_b.encoding = sensor_msgs::image_encodings::MONO8;
 
     // This is format independent, based on the one we declared. 
-    img_pub.publish(cv_bridge.toImageMsg()); 
+    img_pub.publish(cv_b.toImageMsg()); 
 }
 
 int main(int argc, char* argv[])
@@ -39,7 +41,7 @@ int main(int argc, char* argv[])
     ros::init(argc, argv, "camera_stalker");
     ros::NodeHandle nh ("~");
 
-    ros::Rate loop_rate(25);
+    ros::Rate loop_rate(15);
 
     // Crear objetos del tipo ImageTransport
         // Objeto para enviar los mensajes por CV_bridge
