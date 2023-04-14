@@ -1,47 +1,68 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import Pose2D
+
+# Matrix libs
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 
-PI = 3.1416
-tao = 0.001
+class Puzzlebotis:
+    # Static variables
+    PI = 3.1416
+    g = 9.81
 
-r = 0.07
-m = 1
-l = 0.2
-I = 1
+    def __init__(self, tao = 0.01, r = 0.07, m = 1, l = 0.2, I = 1, initX = PI/4, initY = 0):
+        rospy.init_node("puzzlebot")
+        rospy.loginfo("Starting node as puzzlebot.")
+        
+        self.message_pub = rospy.Publisher("position", Pose2D, queue_size=5)
+        self.rate = rospy.Rate(1/tao)
+        self.tao = tao
+        # r -> robot
+        self.r = {"r": r,
+                    "m": m,
+                    "l": l,
+                    "I": I}
+        rospy.on_shutdown(self.stop)
+        
+        # This control is
+        # * x
+        # * y
+        # * theta_d
+        # * vel_d
+        # * omega_d
+        self.states = np.array([[0.0, 0.0, 0.0, 0.0, 0.0]]).T
 
-x = np.array([[0.0,0.0,0.0,0.0,0.0]]).T
+        A = np.array([[0, 1],  [-Puzzlebotis.g, 0]])
+        B = np.array([[0, 1]]).T
 
-A = np.array([[0,1], [-9.8,0]])
-B = np.array([[0,1]]).T
+    def stop(self):
+        rospy.loginfo("Ended puzzlebot")
+    
+    def runrum(self):
+        u = np.array([[1,0]]).T
+        xdot = self.states[3]*np.cos(self.states[2])
+        ydot = self.states[3]*np.sin(self.states[2])
+        tdot = self.states[4]
+        vdot = (u[0] + u[1])/(self.r["r"]*self.r["m"])
+        odot = self.r["l"]*(u[0]-u[1])/(self.r["r"]*self.r["I"])
 
-t0 = np.array([[0]])
-out = np.concatenate((t0,x.T), axis=1)
+        self.states[0] = self.states[0] + self.tao*(xdot)
+        self.states[1] = self.states[1] + self.tao*(ydot)
+        self.states[2] = self.states[2] + self.tao*(tdot)
+        self.states[3] = self.states[3] + self.tao*(vdot)
+        self.states[4] = self.states[4] + self.tao*(odot)
 
-for i in np.arange(tao,10,tao):
-    u = np.array([[1,0]]).T
-    xdot = x[3]*np.cos(x[2])
-    ydot = x[3]*np.sin(x[2])
-    tdot = x[4]
-    vdot = (u[0] + u[1])/(r*m)
-    odot = l*(u[0]-u[1])/(r*I)
+        msg = Pose2D()
+        msg.x = self.states[0]
+        msg.y = self.states[1]
+        msg.theta = self.states[2]
 
-    x[0] = x[0] + tao*(xdot)
-    x[1] = x[1] + tao*(ydot)
-    x[2] = x[2] + tao*(tdot)
-    x[3] = x[3] + tao*(vdot)
-    x[4] = x[4] + tao*(odot)
+        self.message_pub.publish(msg)
 
-    #x = x + tao*(A@x + B*u)
-
-    t0 = np.array([[i]])
-    out_dummy = np.concatenate((t0,x.T),axis=1)
-    out = np.concatenate((out, out_dummy), axis=0)
-
-df = pd.DataFrame(out, columns = ["time", "x0", "x1", "x2", "x3", "x4"])
-print(df)
-
-df.plot(x="x0", y=["x1"])
-
-plt.show()
-
+if __name__ == '__main__':
+    
+    pp = Puzzlebotis(0.02)
+    while not rospy.is_shutdown():
+        pp.runrum()
+        pp.rate.sleep()
+    
