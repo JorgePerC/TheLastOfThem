@@ -1,0 +1,5 @@
+penduloNoLineal
+/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/penduloNoLineal/cmake.lock /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/./cmake.lock
+/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/penduloNoLineal/lib/pkgconfig/penduloNoLineal.pc /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/lib/pkgconfig/penduloNoLineal.pc
+/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/penduloNoLineal/share/penduloNoLineal/cmake/penduloNoLinealConfig.cmake /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/share/penduloNoLineal/cmake/penduloNoLinealConfig.cmake
+/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/penduloNoLineal/share/penduloNoLineal/cmake/penduloNoLinealConfig-version.cmake /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/share/penduloNoLineal/cmake/penduloNoLinealConfig-version.cmake
