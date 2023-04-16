@@ -1,0 +1,1 @@
+/home/parzival_stark/Documents/Tec/Semestre8/Bloque_integrador/ROS/Practica/ros_ws/devel/./cmake.lock 30
