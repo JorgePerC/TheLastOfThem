@@ -27,6 +27,8 @@ int main(int argc, char* argv[])
         // Objeto para enviar los mensajes por CV_bridge
     image_transport::ImageTransport it(nh);
 
+    // Crear publisher de image transport
+        //Nótese como es diferente al publisher tradicional
     image_transport::Publisher img_pub = it.advertise("/camera/rgb", 1);
 
     // Convierte entre imagen de ROS y Np matrix
@@ -40,9 +42,10 @@ int main(int argc, char* argv[])
 
     while (ros::ok())
     {
-        /* code for loop body */
+        // Create a variable as n-dimentional array
         cv::Mat img;
         
+        // Read camera 
         camIn.read(img);
 
         cv::resize(img, img, cv::Size(640,480));
@@ -51,16 +54,17 @@ int main(int argc, char* argv[])
         cv_b.image = img;
 
         cv_b.header.stamp = ros::Time::now();
-        
+            // Need to specify for each bridge message
         cv_b.encoding = sensor_msgs::image_encodings::BGR8;
     
-        // This is format independent, based on the one we declared. 
+        // This is format independent, based on the one we previously declared
         img_pub.publish(cv_b.toImageMsg());
 
         ros::spinOnce();
         loop_rate.sleep();
     }
-
+    
+    // Free camera
     camIn.release();
     
 }
