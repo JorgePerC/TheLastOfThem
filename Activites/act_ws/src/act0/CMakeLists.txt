@@ -78,3 +78,9 @@ target_link_libraries(
   talkerCustom
   ${catkin_LIBRARIES}
 )
+
+# Python nodes:
+catkin_install_python(PROGRAMS
+  scripts/pyCustTalker.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
