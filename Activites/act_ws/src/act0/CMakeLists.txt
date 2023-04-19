@@ -11,6 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  # For custom messages
+  custom_msgs # Package name for imported msgs
+              # There is no need to include dependencies from the original 
+              # package, since they've already been compiled as binaries
 )
 
 ###################################
@@ -55,6 +59,10 @@ add_executable(
   src/listener.cpp
 )
 
+add_executable(
+  talkerCustom 
+  src/talkerCustom.cpp
+)
 
 target_link_libraries(
   talker
@@ -66,3 +74,7 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(
+  talkerCustom
+  ${catkin_LIBRARIES}
+)
