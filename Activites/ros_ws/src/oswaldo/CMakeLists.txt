@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   cv_bridge
   visualization_msgs
+  custom_msgs
 )
 
 ## Agreagar librerias
@@ -47,3 +48,11 @@ target_link_libraries(camera_subscriber ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(marker_pub src/marker_pub.cpp)
 target_link_libraries(marker_pub ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(talker_custom src/talker_custom.cpp)
+target_link_libraries(talker_custom ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+# Python nodes
+catkin_install_python(PROGRAMS
+  src/talker_custom.py
+  DESTINATION $(CATKIN_PACKAGE_BIN_DESTINATION))
