@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<!--Llave principal-->
+<launch>
+
+    <!-- Si pones un param después de el nodo, automáticamente lo pone como parte del nodo -->
+  <param name="imgs_path" type = "string" value="$(find vision_nodes)/media"/>
+  <!--Nodo1: Particula de RViz-->
+  <node name="pointCloudNode" pkg="vision_nodes" type="pointCloud.py" output="screen">
+  
+  
+  
+
+  
+  
+  
+  <!--Metodo1: Cargar desde archivo de configuracion-->
+  <!-- <rosparam command="load" file="$(find vision_nodes)/config/params.yaml"/> -->
+  
+  </node>
+
+</launch>
