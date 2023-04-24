@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- ===== Add .yamls to the parameter server ===== -->
+    <rosparam command="load" file="$(find act0)/config/myParams.yamls"/>
+    <!-- hola -->
+
+    <!-- ===== Launch ROS nodes ===== -->
+        
+        <!-- Load single node -->
+                                <!-- Type is as declared on CMakeLists -->
+    <node name="talker1" pkg="act0" type="talker" output="screen"/>
+        <!-- Can even do so with different names -->
+    <node name="listener1" pkg="act0" type="listener" output="screen"/>
+    <node name="listener2" pkg="act0" type="listener" output="screen"/>
+
+</launch>
