@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<!-- Llave principal -->
+
+<launch>
+
+    <!--Nodo1: Particula de RViz-->
+    <node name="talker_py" pkg="oswaldo" type="talker_custom.py" output="screen">
+
+    <!--Metodo1: Cargar desde archivo de configuracion-->
+    <rosparam command="load" file="$(find oswaldo)/config/params.yaml"/>
+
+    </node>
+
+</launch>
