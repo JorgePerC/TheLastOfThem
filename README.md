@@ -1,9 +1,11 @@
 # TheLastOfThem
-Our final project on the university 
+Our final project in university. 
+
+
 
 ## What this is about:
-* Build a rover
-* Rich maps
+* Build a differential rover
+* It's ment to generate rich maps about WiFi coverage
 
 ### Authors:
 @ Luis Vaca
