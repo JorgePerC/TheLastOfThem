@@ -32,6 +32,7 @@ statesSensor = np.array([   [1.0, 0.0],
 
 # Aka Q
     # Covariance from model noise
+    # How it grows over time
 model_Cov_Mat = np.array([ [1.0, 0.0], 
                             [0.0, 1.0]]) 
 
@@ -57,7 +58,7 @@ for i in np.arange(Tao,10,Tao):
 
     # Update prediction 
     xPredic = xPredic + Tao*( 
-            statesX +
+            np.matmul(systemDynamics, xPredic) + externalForces*u +
             # Kalman filter stuff
             np.matmul(
                 np.matmul(
