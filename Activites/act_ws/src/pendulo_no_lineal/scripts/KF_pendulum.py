@@ -57,6 +57,7 @@ for i in np.arange(Tao,10,Tao):
     sensorInputs = statesX.copy() 
 
     # Update prediction 
+        # Kalman only works with pediction models, and it already takes into acount the system dynamics
     xPredic = xPredic + Tao*( 
             np.matmul(systemDynamics, xPredic) + externalForces*u +
             # Kalman filter stuff
