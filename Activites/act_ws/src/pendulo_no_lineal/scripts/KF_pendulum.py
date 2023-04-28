@@ -8,33 +8,92 @@ PI = 3.1416
 Tao = 0.001
 g = 9.8
 
-x = np.array([[PI/4,0]]).T
+statesX = np.array([[PI/4, 0.0]]).T
+xPredic = np.array([[0.0, 0.0]]).T
 
-t0 = np.array([ [0] ])
-out = np.concatenate((t0, x.T), axis=1)
+t0 = np.array([ [0.0] ])
+out = np.concatenate((t0, statesX.T, xPredic.T), axis=1)
 
-A = np.array([[0, 1], [-g, 0]])
-B = np.array([[0, 1]]).T
-z = x.copy() #States from sensors
-H = np.array([[1, 0], [0,1]]) # Vector space from sensors
+# Aka A
+systemDynamics = np.array([[0.0, 1.0], [-g, 0.0]])
 
-Q = np.array([[1.0, 0], [0,1.0]]) # Covariance from model noise
-R = np.array([[1.0, 0], [0,1.0]]) # Covariance from sensor input
+# Aka B
+externalForces = np.array([[0.0, 1.0]]).T
 
+# Aka z
+    # In this case our sensors are exactly the dynamics
+sensorInputs = statesX.copy() 
 
-P = np.array([[0, 0], [0,0]])
+# Aka H
+    # Identity-ish matrix for sensor input
+    # Vector space from sensor readouts to statesX
+statesSensor = np.array([   [1.0, 0.0], 
+                            [0.0, 1.0]]) 
 
-for i in np.arange(Tao,30,Tao):
-    u = 0
-    x = x + Tao*(A@x + B*u + P@H.T@np.linalg.inv(R)@(z-H@x))
-    P = P + Tao*(A@P + P@A.T + Q - P@H.T@np.linalg.inv(R)@H@P)
+# Aka Q
+    # Covariance from model noise
+model_Cov_Mat = np.array([ [1.0, 0.0], 
+                            [0.0, 1.0]]) 
 
+# Aka R
+    # Covariance from sensor input
+sensor_Cov_Mat = np.array([ [1.0, 0.0], 
+                            [0.0, 1.0]]) 
+
+# Aka P
+    # Covariance from state estimation 
+prediction_Cov_Mat = np.array([ [0.0, 0.0], 
+                                [0.0, 0.0]])
+
+for i in np.arange(Tao,10,Tao):
+    u = 0 # control 
+    G = 1
+
+    # Update state vector
+    # Normal system dynamics
+    statesX = statesX + Tao*(np.matmul(systemDynamics, statesX) + externalForces*u) 
+    # Update sensor readout
+    sensorInputs = statesX.copy() 
+
+    # Update prediction 
+    xPredic = xPredic + Tao*( 
+            statesX +
+            # Kalman filter stuff
+            np.matmul(
+                np.matmul(
+                    np.matmul(prediction_Cov_Mat, statesSensor.T), 
+                    np.linalg.inv(sensor_Cov_Mat)), 
+                (sensorInputs - np.matmul(statesSensor, xPredic)))
+                )
+    
+    # Update prediction covariance matrix
+    prediction_Cov_Mat = prediction_Cov_Mat + Tao*(
+            # Covariance of our system
+            np.matmul(systemDynamics, prediction_Cov_Mat) + 
+            # Y tho?
+            np.matmul(prediction_Cov_Mat, systemDynamics.T) +
+            # Since G is identity, it's like multiplying by one
+            model_Cov_Mat - 
+            
+            np.matmul(
+                np.matmul(
+                    np.matmul(
+                        np.matmul(prediction_Cov_Mat, statesSensor.T), 
+                    np.linalg.inv(sensor_Cov_Mat)), 
+                statesSensor), 
+            prediction_Cov_Mat)
+        
+            )
+    
+    # Insert to final graph
     t0 = np.array([ [i] ])
-    out_dummy = np.concatenate((t0, x.T), axis=1)
+    out_dummy = np.concatenate((t0, statesX.T, xPredic.T), axis=1)
     out = np.concatenate((out, out_dummy), axis=0)
 
-df = pd.DataFrame(out, columns=["time", "x1", "x2"])
 
-df.plot(x="time", y=["x1"])
+df = pd.DataFrame(out, columns=["time", "x1", "x2", "p1", "p2"])
+
+df.plot(x="time", y=["x1", "p1"])
+df.plot(x="time", y=["x2", "p2"])
 
 plt.show()
