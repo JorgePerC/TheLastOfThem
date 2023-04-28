@@ -9,10 +9,10 @@ Tao = 0.001
 g = 9.8
 
 statesX = np.array([[PI/4, 0.0]]).T
-xPredic = np.array([[0.0, 0.0]]).T
+xStimate = np.array([[0.0, 0.0]]).T
 
 t0 = np.array([ [0.0] ])
-out = np.concatenate((t0, statesX.T, xPredic.T), axis=1)
+out = np.concatenate((t0, statesX.T, xStimate.T), axis=1)
 
 # Aka A
 systemDynamics = np.array([[0.0, 1.0], [-g, 0.0]])
@@ -58,14 +58,14 @@ for i in np.arange(Tao,10,Tao):
 
     # Update prediction 
         # Kalman only works with pediction models, and it already takes into acount the system dynamics
-    xPredic = xPredic + Tao*( 
-            np.matmul(systemDynamics, xPredic) + externalForces*u +
+    xStimate = xStimate + Tao*( 
+            np.matmul(systemDynamics, xStimate) + externalForces*u +
             # Kalman filter stuff
             np.matmul(
                 np.matmul(
                     np.matmul(prediction_Cov_Mat, statesSensor.T), 
                     np.linalg.inv(sensor_Cov_Mat)), 
-                (sensorInputs - np.matmul(statesSensor, xPredic)))
+                (sensorInputs - np.matmul(statesSensor, xStimate)))
                 )
     
     # Update prediction covariance matrix
@@ -89,7 +89,7 @@ for i in np.arange(Tao,10,Tao):
     
     # Insert to final graph
     t0 = np.array([ [i] ])
-    out_dummy = np.concatenate((t0, statesX.T, xPredic.T), axis=1)
+    out_dummy = np.concatenate((t0, statesX.T, xStimate.T), axis=1)
     out = np.concatenate((out, out_dummy), axis=0)
 
 
