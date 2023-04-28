@@ -1,0 +1,3 @@
+[submodule "capy-bot_ws/src/rosserial_stm32"]
+	path = capy-bot_ws/src/rosserial_stm32
+	url = https://github.com/yoneken/rosserial_stm32.git
