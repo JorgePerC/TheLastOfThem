@@ -1,6 +1,0 @@
-quaternions
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/quaternions/cmake.lock /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/./cmake.lock
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/quaternions/lib/quaternions/quaternions_node /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/lib/quaternions/quaternions_node
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/quaternions/lib/pkgconfig/quaternions.pc /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/lib/pkgconfig/quaternions.pc
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/quaternions/share/quaternions/cmake/quaternionsConfig.cmake /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/share/quaternions/cmake/quaternionsConfig.cmake
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/quaternions/share/quaternions/cmake/quaternionsConfig-version.cmake /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/share/quaternions/cmake/quaternionsConfig-version.cmake

@@ -1,6 +1,0 @@
-vision_nodes
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/vision_nodes/cmake.lock /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/./cmake.lock
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/vision_nodes/lib/pkgconfig/vision_nodes.pc /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/lib/pkgconfig/vision_nodes.pc
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/vision_nodes/lib/python2.7/dist-packages/vision_nodes/__init__.py /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/lib/python2.7/dist-packages/vision_nodes/__init__.py
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/vision_nodes/share/vision_nodes/cmake/vision_nodesConfig-version.cmake /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/share/vision_nodes/cmake/vision_nodesConfig-version.cmake
-/home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/.private/vision_nodes/share/vision_nodes/cmake/vision_nodesConfig.cmake /home/rosmelodic/Documents/TheLastOfThem/Activites/act_ws/devel/share/vision_nodes/cmake/vision_nodesConfig.cmake
