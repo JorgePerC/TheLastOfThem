@@ -60,7 +60,8 @@ def main():
     for x in range (imgRGB.shape[1]):
       
       # Crear 2D vector to representar pixel
-      pixel_2d = np.array([[y], [x], [1]])
+        # invertimos para seguir la regla de la mano derecha
+      pixel_2d = np.array([[x], [y], [1]])
       # Leer la profundidad (z), para poder hacer el calculo
         # Como esta en mm, pasamos a m
           # Pq rviz trabaja en m
@@ -87,7 +88,7 @@ def main():
   f = [PointField("x", 0, PointField.FLOAT32, 1),
        PointField("y", 4, PointField.FLOAT32, 1),
        PointField("z", 8, PointField.FLOAT32, 1),
-       PointField("rgba", 12, PointField.FLOAT32, 1)]
+       PointField("rgba", 12, PointField.UINT32, 1)]
   pCloudMsg = point_cloud2.create_cloud(h, f, points3D)
 
   pClouds_pub = rospy.Publisher("/nubedCulos", PointCloud2, queue_size=1)

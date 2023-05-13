@@ -13,7 +13,7 @@ h = 0.15
 d = 0.10
 I = 1
 
-q_deseada = np.array([[5.0,  20.0,  0.0]]).T
+q_deseada = np.array([[150.0,  120.0,  0.0]]).T
 
 # Aka. q (estado inicial)
 x = np.array([[1.0,  1.0,  0.0]]).T
