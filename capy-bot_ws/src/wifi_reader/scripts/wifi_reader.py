@@ -8,7 +8,7 @@ from std_msgs.msg import Float32
 def get_wifi():
     # Example 2: Get a list of current tasks
     result = subprocess.run(["iwconfig"], shell=True)
-
+    print(result)
     signal_strength = float(result)
 
     return signal_strength
