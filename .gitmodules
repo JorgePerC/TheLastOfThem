@@ -9,6 +9,8 @@
 [submodule "capy-bot_ws/src/depthimage_to_laserscan"]
 	path = capy-bot_ws/src/depthimage_to_laserscan
 	url = https://github.com/ros-perception/depthimage_to_laserscan.git
+
 [submodule "capy-bot_ws/src/realsense-ros"]
 	path = capy-bot_ws/src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
+    branch = ros1-legacy
