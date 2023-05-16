@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-import subprocess
+import os
 
 import rospy
 from std_msgs.msg import Float32
 
 def get_wifi():
     # Example 2: Get a list of current tasks
-    result = subprocess.run(["iwconfig"], shell=True)
-    print(result)
-    signal_strength = float(result)
+    result = os.popen("iwconfig").read()
+    a = result.split("Signal level=") 
+    num = a[-1].split("dBm")
+    signal_strength = int(num[0])
 
     return signal_strength
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
 
     node_pub = rospy.Publisher("/robot/antena", Float32, queue_size=1)
     
-    node_rate = rospy.Rate(2)
+    node_rate = rospy.Rate(2                                               )
 
     while not rospy.is_shutdown():
 
@@ -28,7 +29,4 @@ if __name__ == "__main__":
         r.data = get_wifi()
         node_pub.publish(r)
 
-        rospy.spin()
         node_rate.sleep()
-
-
