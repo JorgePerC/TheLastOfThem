@@ -1,13 +1,11 @@
-[submodule "rosserial_stm32"]
+[submodule "capy-bot_ws/src/rosserial_stm32"]
 	path = capy-bot_ws/src/rosserial_stm32
 	url = https://github.com/yoneken/rosserial_stm32.git
 
-
-[submodule "depthimage_to_laserscan"]
-	path = capy-bot_ws/src/depthimage_to_laserscan
-	url = https://github.com/ros-perception/depthimage_to_laserscan.git
-
-[submodule "mrpt_slam"]
+[submodule "capy-bot_ws/src/mrpt_slam"]
 	path = capy-bot_ws/src/mrpt_slam
 	url = https://github.com/mrpt-ros-pkg/mrpt_slam.git
     
+[submodule "capy-bot_ws/src/depthimage_to_laserscan"]
+	path = capy-bot_ws/src/depthimage_to_laserscan
+	url = https://github.com/ros-perception/depthimage_to_laserscan.git
