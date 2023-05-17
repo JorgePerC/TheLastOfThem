@@ -1,0 +1,2 @@
+camera_info_topic: '/camera/depth/camera_info'
+image_topic: '/camera/depth/image_rect_raw'
