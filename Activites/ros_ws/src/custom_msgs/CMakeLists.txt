@@ -22,6 +22,8 @@ add_message_files(
   FILES
   pixel.msg
   point.msg
+  GridMap.msg
+  Cell.msg
 )
 
 # Dependencias de los mensajes

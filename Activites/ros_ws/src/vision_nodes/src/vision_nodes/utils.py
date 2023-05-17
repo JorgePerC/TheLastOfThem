@@ -8,6 +8,9 @@ from sensor_msgs import point_cloud2
 from sensor_msgs.msg import PointCloud2, PointField
 from visualization_msgs.msg import Marker, MarkerArray
 
+
+from custom_msgs.msg import GridMap, Cell
+
 # Utilidades
 from sensor_msgs import point_cloud2
 
@@ -106,7 +109,10 @@ class Vision():
 # Mapas de ocupacion
 class OccGrid():
   # Constructor
-  def __init__(self, x_g, y_g, d_g, z_min, z_max, z_floor, p_thresh, p_occ, p_free):
+  def __init__(self, x_g = 10, y_g = 10, d_g = 0.1,
+                z_min = 0.5, z_max= 1.5, z_floor = 0.0,
+                p_thresh = 0.8, p_occ = 0.65, p_free= 0.35,
+                thresh_obst = 0.5, thresh_angle = 10.0*np.pi/180.0):
     # Guardar atributos
 
     ## a) Parametros de la gradilla
@@ -128,6 +134,55 @@ class OccGrid():
     # Relacion de probabilidades
     self.l_occ = np.log(self.p_occ/self.p_free)
     self.l_free = np.log(self.p_free/self.p_occ)
+
+    # Calcular posiciones de la gradilla respecto al robot
+    self.grid_position = np.array([np.tile(np.arange(-0.5*self.d_g*self.x_g, 0.5*self.d_g*self.x_g, self.d_g)[:,None], (1, self.y_g)),
+                           np.tile(np.arange(-0.5*self.d_g*self.y_g, 0.5*self.d_g*self.y_g, self.d_g)[:,None].T, (self.x_g, 1))])
+    
+    # Guardar thresholds
+    self.thresh_obs = thresh_obst
+    self.thresh_angle = thresh_angle
+
+  # Actualizacion con laser
+  def update_laser(self, state_odom, state_laser):
+    # Crear una copia del mapa
+    occ_map_pos = self.grid_position.copy()
+
+    # Traducir posiciones de la gradilla
+    occ_map_pos[0, :, :] -= state_odom[0]
+    occ_map_pos[1, :, :] -= state_odom[1]
+
+    # Calcular orientacion de la gradilla
+    occ_map_angle = np.arctan2(occ_map_pos[1, :, :], occ_map_pos[0, :, :])
+
+    # Ajustar orientacion
+    occ_map_angle -= state_odom[2]
+
+    # Ajustar rango de orientacion
+    occ_map_angle[occ_map_angle > np.pi] -= 2.0*np.pi
+    occ_map_angle[occ_map_angle < -np.pi] += 2.0*np.pi
+
+    # Calcular distancia de la gradilla al robot
+    occ_map_dist = np.linalg.norm(occ_map_pos, axis=0)
+
+    # Analizar info del laser
+    #print(state_laser.shape)
+    #print(state_laser)
+
+    for i in range(state_laser.shape[1]):
+      # Extraer info del laser
+      angle = state_laser[0, i]
+      dist = state_laser[1, i]
+
+      # Estimar zonas ocupadas
+      occ_zones = (np.abs(occ_map_angle - angle) < self.thresh_angle) & (np.abs(occ_map_dist - dist) <= self.thresh_obs)
+
+      # Determinar zonas libres
+      free_zones = (np.abs(occ_map_angle - angle) <= self.thresh_angle) & (occ_map_dist <= (dist - self.thresh_obs))
+
+      # Actualizar mapa
+      self.map[occ_zones] += self.l_occ
+      self.map[free_zones] += self.l_free 
 
   # Metodos de instancia
   def update(self, p_cloud):
@@ -181,6 +236,43 @@ class OccGrid():
     
     return occ_map
   
+  # Generar mensaje personalizado de mapa de ocupacion
+  def map_msg(self, occ_map, ros_time):
+
+    # Inicializar mensaje
+    msg_grid = GridMap()
+
+    # Analizar mapa de ocupacion
+    for i in range(occ_map.shape[0]):
+      
+      for j in range(occ_map.shape[1]):
+
+        # Incializar marcador
+        cell = Cell()
+
+        # Llenar atributos de celda
+        
+        # 1- Posicion en la gradilla
+        cell.grid.x = i
+        cell.grid.y = j
+        cell.grid.z = 0
+
+        # 2- Posicion espacial
+        cell.position.x = self.d_g*(i - 0.5 * self.map.shape[0])
+        cell.position.y = self.d_g*(j - 0.5 * self.map.shape[1])
+        cell.position.z = 0.0
+
+        # 3- Probabilidad
+        cell.prob.data = occ_map[i, j]
+
+        # Agregar a mensaje
+        msg_grid.grid.append(cell)
+    
+    # Estampar mensaje
+    msg_grid.header.stamp = ros_time
+  
+    return msg_grid
+
   # Generar mapa de ocupacion en Rviz
   def get_rviz(self, occ_map, ros_time):
     
