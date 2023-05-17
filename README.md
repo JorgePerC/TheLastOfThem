@@ -12,17 +12,40 @@ Our final project in university.
 @ Josue Mojica
 @ Jorge Pérez
 
-Owen nos la va a pelar
+Owen nos la pela
 
 
-### Some dependencies: 
-* ros-melodic-mrpt-msg
-* ros-melodic-mrpt-msgs-bridge
-sudo apt-get install libmrpt-dev mrpt-apps
-sudo apt-get install ros-noetic-mrpt-slam
-sudo apt install ros-melodic-multimaster-fkie 
-sudo apt install ros-melodic-mrpt-sensors
-udo apt install ros-melodic-realsense2-camera
+## Some dependencies: 
 
-fkie_multimaster_msgsC
-mrpt-guiConfig
+To pull the submodules included use:
+
+    git submodule update --init --recursive
+
+Also, you may need to install from APT:
+
+* ros-melodic-mrpt-slam
+* ros-melodic-depthimage-to-laserscan
+* ros-melodic-realsense2-camera (Follow additional instructions for Jetson Devices)
+* ros-melodic-rosserial
+
+In case something didn't work:
+
+    * ros-melodic-mrpt-sensors
+    * ros-melodic-mrpt-msgs
+    * ros-melodic-mrpt-msgs-bridge
+    * libmrpt-dev mrpt-apps
+    * fkie_multimaster_msgsC
+    * mrpt-guiConfig
+    * ros-melodic-multimaster-fkie 
+
+## BEFORE BUILDING
+
+Add mrpt_graphslam_2d to the catkin exclude 
+
+    catkin config --skiplist mrpt_graphslam_2d
+
+Change the branch on realsense-ros
+
+    cd src/realsense-ros/
+    git checkout ros1-legacy
+
