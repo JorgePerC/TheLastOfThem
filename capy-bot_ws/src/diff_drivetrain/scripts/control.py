@@ -37,11 +37,12 @@ class PoseControl:
             # X   
             # Y
             # Theta 
-        self.q_deseada = np.array([[0.0, 0.0, 0.0]]).T
+        self.q_deseada = np.array([[0.0, 0.0]]).T
         self.threshold = threshold
 
     def run_control(self):
         # Transformation matrix 
+        """
         dMatrix = np.array([
             [self.r/2*np.cos( self.sensorVect[2, 0] )-self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] ), 
                 self.r/2*np.cos( self.sensorVect[2, 0] )+self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] ), 0],
@@ -51,20 +52,29 @@ class PoseControl:
 
             [self.r/self.d, 
                 -self.r/self.d, 0]])
-        K = np.array([[1, 0, 0], 
-                        [0, 2, 0], 
-                        [0, 0, 0]])
+        """
+        dMatrix = np.array([
+            [self.r/2*np.cos( self.sensorVect[2, 0] ) - self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] ), 
+                self.r/2*np.cos( self.sensorVect[2, 0] ) + self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] )],
+
+            [self.r/2*np.sin( self.sensorVect[2, 0] ) - self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] ), 
+                self.r/2*np.sin( self.sensorVect[2, 0] ) + self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] )]])
+
+        K = np.array([[1.0, 0.0], 
+                        [0.0, 2.0]])
 
         # Calculate error
-        error = self.q_deseada - self.sensorVect 
-            # Stop if we are near the objective
+        estado = np.array([[self.sensorVect[0,0], self.sensorVect[1,0]]]).T
+        error = self.q_deseada - estado 
+
+        # Stop if we are near the objective
         if np.average(error) < self.threshold:
             error = 0
 
         # Calculate control 
         u = np.matmul( np.linalg.inv(dMatrix),
-                        self.sensorVect + 
-                            np.matmul(K, error) )
+                        estado + 
+                            np.dot(K, error) )
         # Send control
         self.pub_wr.publish(u[0, 0])
         self.pub_wl.publish(u[1, 0])
@@ -72,7 +82,7 @@ class PoseControl:
     def get_poseDeseada(self, msg):
         self.q_deseada[0, 0] = msg.x
         self.q_deseada[1, 0] = msg.y 
-        self.q_deseada[2, 0] = msg.theta 
+        #self.q_deseada[2, 0] = msg.theta 
 
     def get_poseRobot(self, msg):
         self.sensorVect[0, 0] = msg.x
