@@ -90,5 +90,5 @@ if __name__ == "__main__":
         # 3 cm threshold
     control = PoseControl(0.048, 0.1, 0.3, threshold= 0.03)
     while not rospy.is_shutdown():
-        control.runrum()
+        control.run_control()
         control.rate.sleep()
