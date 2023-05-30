@@ -88,5 +88,7 @@ class PoseControl:
     
 if __name__ == "__main__":
         # 3 cm threshold
-    name_node = PoseControl(0.048, 0.1, 0.3, threshold= 0.03)
-    rospy.spin()
+    control = PoseControl(0.048, 0.1, 0.3, threshold= 0.03)
+    while not rospy.is_shutdown():
+        control.runrum()
+        control.rate.sleep()
