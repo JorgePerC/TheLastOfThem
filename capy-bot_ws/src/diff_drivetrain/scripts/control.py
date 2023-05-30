@@ -10,11 +10,11 @@ class PoseControl:
         rospy.loginfo("Starting PoseControl as control")
         # Subscribers:
         self.sub_pose = rospy.Subscriber("/robot/pose", Pose2D, self.get_poseRobot)
-        self.sub_poseD = rospy.Subscriber("/robot/objetivo", Pose2D, self.get_poseDeseada)
+        self.sub_poseD = rospy.Subscriber("/robot/objective", Pose2D, self.get_poseDeseada)
 
         # Publishers:
-        self.pub_wl = rospy.Publisher("/robot/wl", Float32, queue_size=5)
-        self.pub_wr = rospy.Publisher("/robot/wr", Float32, queue_size=5)
+        self.pub_wl = rospy.Publisher("/robot/set_wl", Float32, queue_size=5)
+        self.pub_wr = rospy.Publisher("/robot/set_wr", Float32, queue_size=5)
         
         # Rate
         self.rate = rospy.Rate(repsInSec)
