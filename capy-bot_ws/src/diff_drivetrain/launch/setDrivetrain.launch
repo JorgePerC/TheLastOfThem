@@ -9,7 +9,8 @@
 
     <!-- ===== Launch Odometry Node ===== -->
     <node name="odom" pkg="diff_drivetrain" type="odometry.py" output="screen"/>
-    <node name="remapControl" pkg="diff_drivetrain" type="cmd_vel2robot.py" output="screen"/>
+    <!-- <node name="remapControl" pkg="diff_drivetrain" type="cmd_vel2robot.py" output="screen"/> -->
+    <node name="control" pkg="diff_drivetrain" type="control.py" output="screen"/>
         <!-- Can even do so with different names -->
     
 
