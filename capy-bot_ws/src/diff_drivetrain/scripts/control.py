@@ -70,7 +70,9 @@ class PoseControl:
         # Stop if we are near the objective
         if np.average(error) < self.threshold:
             error = 0
-
+            self.pub_wr.publish(0)
+            self.pub_wl.publish(0)
+            return
         # Calculate control 
         u = np.matmul( np.linalg.inv(dMatrix),
                         estado + 
