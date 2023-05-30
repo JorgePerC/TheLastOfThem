@@ -68,7 +68,7 @@ class PoseControl:
         error = self.q_deseada - estado 
 
         # Stop if we are near the objective
-        if np.average(error) < self.threshold:
+        if np.linalg.norm(error) < self.threshold:
             error = 0
             self.pub_wr.publish(0)
             self.pub_wl.publish(0)
