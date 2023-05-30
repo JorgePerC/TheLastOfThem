@@ -35,7 +35,7 @@ class Odometry:
         self.pose = Pose2D()
         self.pose.x = 0
         self.pose.y = 0
-        self.pose.theta = Odometry.PI/2
+        self.pose.theta = 0 #Odometry.PI/2 TODO: Try alternative
         
         # Robot characteristics:
         self.r = robot_r
@@ -54,10 +54,10 @@ class Odometry:
         self.sensorVect[0, 0] = msg.data 
         
     def get_wr(self, msg):
-        self.sensorVect[1, 0] = msg.data
+        self.sensorVect[1, 0] = -msg.data
 
     def stop(self):
-        rospy.loginfo("Ended puzzlebot")
+        rospy.loginfo("Ended odometry")
     
     def runrum(self):
         # Update angular velocity from the wl and wr
