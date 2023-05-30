@@ -76,6 +76,14 @@ class PoseControl:
                         estado + 
                             np.dot(K, error) )
         # Send control
+        if (u[0, 0] < -5):
+            u[0, 0] = -5
+        elif (u[0, 0] > 5):
+            u[0, 0] = 5
+        if (u[1, 0] < -5):
+            u[1, 0] = -5
+        elif (u[1, 0] > 5):
+            u[1, 0] = 5
         self.pub_wr.publish(u[0, 0])
         self.pub_wl.publish(u[1, 0])
         
