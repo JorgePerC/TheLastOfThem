@@ -11,7 +11,7 @@ class Odometry:
     PI = 3.1416
     g = 9.81
 
-    def __init__(self, robot_r, robot_h, robot_d, tmsInSec = 25):
+    def __init__(self, tmsInSec = 25):
         rospy.init_node("odometry")
         rospy.loginfo("Starting ROSNode as odometry.")
 
@@ -103,7 +103,7 @@ class Odometry:
         self.pub_pose.publish(self.pose)
     
 if __name__ == "__main__":
-    odom = Odometry(0.048, -0.1, 0.3)
+    odom = Odometry()
     while not rospy.is_shutdown():
         odom.runrum()
         odom.rate.sleep()
