@@ -10,7 +10,6 @@ class Cmd_velControl:
         rospy.init_node("commandCapywheels")
         rospy.loginfo("Starting Cmd_velControl as name_node.")
 
-        self.scale = scale
         # ===== Subscribers =====
         self.sub_cmd = rospy.Subscriber("/turtle1/cmd_vel", Twist, self.get_cmd)
         
@@ -19,10 +18,12 @@ class Cmd_velControl:
         self.pub_wr = rospy.Publisher("/robot/set_wr", Float32, queue_size = 5)
         
         # ===== Params =====
-        self.r = rospy.get_param("/global_name")
-        self.d = rospy.get_param("/global_name")
-
+        self.d = rospy.get_param("/Capybot/dPoint")
+        self.r = rospy.get_param("/Capybot/wheelRadius")
+        
+        # ===== Class attributes =====
         self.cmd = np.array([[0.0, 0.0]]).T
+        self.scale = scale
     
     def get_cmd(self, msg):
         

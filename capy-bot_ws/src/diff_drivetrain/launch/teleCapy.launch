@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ===== Add .yamls to the parameter server ===== -->
+    <rosparam command="load" file="$(find diff_drivetrain)/config/robotConstants.yaml"/>
+    
+    <!-- ===== Launch Rosserial ===== -->
+    <node name="serial_ros" pkg="rosserial_python" type="serial_node.py" output="screen">
+        <param name="port"              type="string"               value="/dev/ttyACM0"/>
+        <param name="baud"              type="int"                  value="115200"/>
+    </node>
+
+    <!-- ===== Launch Odometry Node ===== -->
+    <node name="odom" pkg="diff_drivetrain" type="odometry.py" output="screen"/>
+    <node name="remapControl" pkg="diff_drivetrain" type="cmd_vel2robot.py" output="screen"/>
+    <!-- <node name="control" pkg="diff_drivetrain" type="control.py" output="screen"/> -->
+        <!-- Can even do so with different names -->
+    
+
+</launch>

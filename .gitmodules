@@ -14,3 +14,9 @@
 	path = capy-bot_ws/src/realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
     branch = ros1-legacy
+[submodule "capy-bot_ws/src/--branch"]
+	path = capy-bot_ws/src/--branch
+	url = https://github.com/ros-drivers/rosserial.git
+[submodule "capy-bot_ws/src/rosserial"]
+	path = capy-bot_ws/src/rosserial
+	url = https://github.com/ros-drivers/rosserial.git

@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+    <!-- ===== Add .yamls to the parameter server ===== -->
+    <rosparam command="load" file="$(find diff_drivetrain)/config/robotConstants.yaml"/>
 
     <!-- ===== Launch Rosserial ===== -->
     <node name="serial_ros" pkg="rosserial_python" type="serial_node.py" output="screen">
