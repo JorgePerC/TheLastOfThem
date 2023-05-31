@@ -13,8 +13,19 @@ class Odometry:
 
     def __init__(self, tmsInSec = 25):
         rospy.init_node("odometry")
+        # ===== Wait for STM32 ===== 
+        try:
+            rospy.loginfo("Waiting for encoder vels from Nucleo board")
+            rospy.wait_for_message('/robot/wr', Float32, timeout = 5)
+            rospy.wait_for_message('/robot/wl', Float32, timeout = 5)
+        except rospy.ROSException as e:
+            print("Velocities not found")
+            rospy.logerr("Can't start odometry. No wl/wr")
+            rospy.logerr(e)
+            
         rospy.loginfo("Starting ROSNode as odometry.")
-
+        
+        
         # ===== Subscribers =====
         self.sub_wl = rospy.Subscriber("/robot/wl", Float32, self.get_wl)
         self.sub_wr = rospy.Subscriber("/robot/wr", Float32, self.get_wr)
@@ -43,7 +54,7 @@ class Odometry:
         self.pose.y = 0
         self.pose.theta = 0 #Odometry.PI/2 TODO: Try alternative
         
-        # # ===== Rate =====
+        # ===== Rate =====
         self.rate = rospy.Rate(tmsInSec)
         self.dt = 1.0/tmsInSec
 
