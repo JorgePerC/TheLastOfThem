@@ -7,33 +7,33 @@ from geometry_msgs.msg import Pose2D
 import tf
 
 class KalmanOdometry:
-    def __init__(self, robot_r, robot_h, robot_d, robot_m = 5, repsInSec = 25):
+    def __init__(self, odomFreq, repsInSec = 25):
         rospy.init_node("Kalman Odometry")
         rospy.loginfo("Starting ROSNode as Kalman odometry.")
-        # Subscribers:
-        self.sub_wl = rospy.Subscriber("/robot/wl", Float32, self.get_wl)
-        self.sub_wr = rospy.Subscriber("/robot/wr", Float32, self.get_wr)
+        
+        # ===== Subscribers =====
+        self.sub_pose = rospy.Subscriber("/robot/pose", Pose2D, self.get_pose)
 
-        # Publishers:
-        self.pub_pose = rospy.Publisher("/robot/pose", Pose2D, queue_size=10)
+        # ===== Publishers =====
+        self.pub_poseK = rospy.Publisher("/robot/kalmanPose", Pose2D, queue_size=10)
         self.pubish_tf  = tf.TransformBroadcaster()
         
-        # Rate
+        # ===== Params =====
+        self.r = rospy.get_param("/Capybot/wheelRadius")
+        self.d = rospy.get_param("/Capybot/dPoint")
+        self.h = rospy.get_param("/Capybot/wheelDistance")
+        self.m = rospy.get_param("/Capybot/mass")
+        # I = 1  
+
+        # ===== Rate =====
         self.rate = rospy.Rate(repsInSec)
         self.dt = 1.0/repsInSec
+        self.dt_odom = 1.0/odomFreq
         
-        # On shutdown
+        # ===== Shutdown =====
         rospy.on_shutdown(self.stop)
 
-        # Robot characteristics
-        self.r = robot_r
-        self.m = robot_m
-        self.h = robot_h
-        self.d = robot_d
-        # I = 1        
-
-        # Robot states
-        self.q_deseada = np.array([[0.0,  0.0,  0.0]]).T
+        # ===== Class attributes =====
 
         # Aka. q (estado inicial)
         self.xP = np.array([[0.0, 0.0, 0.0]]).T
@@ -45,14 +45,14 @@ class KalmanOdometry:
         # Aka z
             # In this case our sensors are exactly the dynamics
         # Sensor vector
-        # * wl
-        # * wr
-        # * 0, but needed for multiplication
+            # x
+            # y
+            # z, but needed for multiplication
         self.sensorVect = np.array([[0.0, 0.0, 0.0]]).T
 
         # Aka H
-            # Identity-ish matrix for sensor input
-            # Vector space from sensor readouts to statesX
+            # Identity matrix for sensor input
+            # Vector space from a virtual sensor
             # Virtual sensor obtained from odometry
                 # x
                 # y
@@ -79,41 +79,42 @@ class KalmanOdometry:
                                         [0.0, 0.0, 0.0],
                                         [0.0, 0.0, 0.0]])
         
+        # System dynamics
+        self.A = np.array([[self.r/2*np.cos( self.xP[2,0] )-self.h*self.r/self.d*np.sin( self.xP[2,0] ),
+                            self.r/2*np.cos( self.xP[2,0] )+self.h*self.r/self.d*np.sin( self.xP[2,0] ), 0],
+                        [self.r/2*np.sin( self.xP[2,0] ) + self.h*self.r/self.d*np.cos( self.xP[2,0] ), 
+                            self.r/2*np.sin( self.xP[2,0] ) - self.h*self.r/self.d*np.cos( self.xP[2,0] ), 0],
+                        [self.r/self.d, 
+                            -self.r/self.d, 0]])
 
 
     def runKalman(self):
-    
-        # Calculate error
-        error = self.q_deseada - self.xP 
+        pass
         
-        # Calculate control (actuator force)
-        u = np.matmul(self.K, error)
+        # Recieving updates from sensors 
+        # It's done on the callbacks :D
 
-        # System dynamics
-        A = np.array([[self.r/2*np.cos( self.xP[2,0] )-self.h*self.r/self.d*np.sin( self.xP[2,0] ), self.r/2*np.cos( self.xP[2,0] )+self.h*self.r/self.d*np.sin( self.xP[2,0] ), 0],
-                [self.r/2*np.sin( self.xP[2,0] )-self.h*self.r/self.d*np.cos( self.xP[2,0] ), self.r/2*np.sin( self.xP[2,0] )+self.h*self.r/self.d*np.cos( self.xP[2,0] ), 0],
-                [self.r/self.d, -self.r/self.d, 0]])
 
+    def get_pose(self, msg):
         # Update sensor readout
-        # sensorVect = self.sensorVect 
-        # It's done on the callbacks
+        self.sensorVect[0,0] = msg.x
+        self.sensorVect[1,0] = msg.y
+        self.sensorVect[2,0] = msg.theta
 
         # Update prediction 
-        self.xP = self.xP + self.dt*( 
-            np.matmul(A, self.xP) + u ) 
-        """+
+        self.xP = self.xP + self.dt_odom*( 
+            np.matmul(self.A, self.xP) +
             # Kalman filter stuff
             np.matmul(self.prediction_Cov_Mat,
                 np.matmul(self.statesSensor.T,
                         np.matmul(np.linalg.inv(self.sensor_Cov_Mat),
                             np.matmul((self.sensorVect-self.statesSensor,
                                 self.xP))))))   
-        
 
         # Update prediction covariance matrix
-        self.prediction_Cov_Mat = self.prediction_Cov_Mat + self.dt*(
-                np.matmul(A, self.prediction_Cov_Mat) 
-                    + np.matmul(self.prediction_Cov_Mat, A.T) 
+        self.prediction_Cov_Mat = self.prediction_Cov_Mat + self.dt_odom*(
+                np.matmul(self.A, self.prediction_Cov_Mat) 
+                    + np.matmul(self.prediction_Cov_Mat, self.A.T) 
                     + self.model_Cov_Mat -
                         np.matmul(self.prediction_Cov_Mat,
                         np.matmul(self.statesSensor.T,
@@ -121,18 +122,12 @@ class KalmanOdometry:
                                 np.linalg.inv(self.sensor_Cov_Mat),
                                 np.matmul(self.statesSensor,
                                         self.prediction_Cov_Mat)))))
-        """
-    def get_wl(self, msg):
-        self.sensorVect[0, 0] = msg.data 
-        
-    def get_wr(self, msg):
-        self.sensorVect[1, 0] = -msg.data
 
     def stop(self):
-        rospy.loginfo("Ended puzzlebot")
+        rospy.loginfo("Ended Kalman")
 
 if __name__ == "__main__":
-    kOdom = KalmanOdometry()
+    kOdom = KalmanOdometry(25)
     while not rospy.is_shutdown():
         kOdom.runKalman()
         kOdom.rate.sleep()
