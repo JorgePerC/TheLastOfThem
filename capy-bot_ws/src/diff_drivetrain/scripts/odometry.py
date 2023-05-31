@@ -22,9 +22,8 @@ class Odometry:
             print("Velocities not found")
             rospy.logerr("Can't start odometry. No wl/wr")
             rospy.logerr(e)
-            
+
         rospy.loginfo("Starting ROSNode as odometry.")
-        
         
         # ===== Subscribers =====
         self.sub_wl = rospy.Subscriber("/robot/wl", Float32, self.get_wl)
