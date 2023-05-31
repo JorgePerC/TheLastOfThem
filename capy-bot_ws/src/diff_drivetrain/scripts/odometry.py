@@ -67,11 +67,11 @@ class Odometry:
         
         # Transformation matrix 
         dMatrix = np.array([
-            [self.r/2*np.cos( self.pose.theta )-self.h*self.r/self.d*np.sin( self.pose.theta ), 
-                self.r/2*np.cos( self.pose.theta )+self.h*self.r/self.d*np.sin( self.pose.theta ), 0],
+            [self.r/2*np.cos( self.pose.theta ) - self.h*self.r/self.d*np.sin( self.pose.theta ), 
+                self.r/2*np.cos( self.pose.theta ) + self.h*self.r/self.d*np.sin( self.pose.theta ), 0],
 
-            [self.r/2*np.sin( self.pose.theta )-self.h*self.r/self.d*np.cos( self.pose.theta ), 
-                self.r/2*np.sin( self.pose.theta )+self.h*self.r/self.d*np.cos( self.pose.theta ), 0],
+            [self.r/2*np.sin( self.pose.theta ) + self.h*self.r/self.d*np.cos( self.pose.theta ), 
+                self.r/2*np.sin( self.pose.theta ) - self.h*self.r/self.d*np.cos( self.pose.theta ), 0],
 
             [self.r/self.d, 
                 -self.r/self.d, 0]])
@@ -84,6 +84,13 @@ class Odometry:
         self.pose.x = self.pose.x + thisIteration[0, 0] * self.dt
         self.pose.y = self.pose.y + thisIteration[1, 0] * self.dt
         self.pose.theta = self.pose.theta + thisIteration[2, 0] *self.dt
+
+        # Limit theta angle
+        if (self.pose.theta > Odometry.PI):
+            self.pose.theta -= 2*Odometry.PI
+        elif (self.pose.theta < -Odometry.PI):
+            self.pose.theta += 2*Odometry.PI
+
         #print(self.dt )
         # print("x: ", self.pose.x, "y: ", self.pose.y )
         # self.pubish_tf.sendTransform((msg.x, msg.y, 0),
@@ -95,7 +102,7 @@ class Odometry:
         self.pub_pose.publish(self.pose)
     
 if __name__ == "__main__":
-    odom = Odometry(0.048, 0.1, 0.3)
+    odom = Odometry(0.048, -0.1, 0.3)
     while not rospy.is_shutdown():
         odom.runrum()
         odom.rate.sleep()

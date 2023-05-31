@@ -42,50 +42,43 @@ class PoseControl:
 
     def run_control(self):
         # Transformation matrix 
-        """
-        dMatrix = np.array([
-            [self.r/2*np.cos( self.sensorVect[2, 0] )-self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] ), 
-                self.r/2*np.cos( self.sensorVect[2, 0] )+self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] ), 0],
 
-            [self.r/2*np.sin( self.sensorVect[2, 0] )-self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] ), 
-                self.r/2*np.sin( self.sensorVect[2, 0] )+self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] ), 0],
-
-            [self.r/self.d, 
-                -self.r/self.d, 0]])
-        """
         dMatrix = np.array([
             [self.r/2*np.cos( self.sensorVect[2, 0] ) - self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] ), 
                 self.r/2*np.cos( self.sensorVect[2, 0] ) + self.h*self.r/self.d*np.sin( self.sensorVect[2, 0] )],
 
-            [self.r/2*np.sin( self.sensorVect[2, 0] ) - self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] ), 
-                self.r/2*np.sin( self.sensorVect[2, 0] ) + self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] )]])
+            [self.r/2*np.sin( self.sensorVect[2, 0] ) + self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] ), 
+                self.r/2*np.sin( self.sensorVect[2, 0] ) - self.h*self.r/self.d*np.cos( self.sensorVect[2, 0] )]])
 
-        K = np.array([[1.0, 0.0], 
-                        [0.0, 2.0]])
+        K = np.array([[0.3, 0.0], 
+                        [0.0, 0.3]])
 
         # Calculate error
         estado = np.array([[self.sensorVect[0,0], self.sensorVect[1,0]]]).T
         error = self.q_deseada - estado 
 
         # Stop if we are near the objective
-        if np.average(error) < self.threshold:
+        #print(error)
+        print(np.linalg.norm(error))
+        if self.isRobotClose():
+            # print("----------LLEGO-------")
             error = 0
-            self.pub_wr.publish(0)
-            self.pub_wl.publish(0)
+            self.pub_wr.publish(0.0)
+            self.pub_wl.publish(0.0)
             return
         # Calculate control 
-        u = np.matmul( np.linalg.inv(dMatrix),
-                        estado + 
-                            np.dot(K, error) )
+        u = np.matmul( K,
+                        #self.q_deseada + 
+                            np.dot(np.linalg.inv(dMatrix), error) )
         # Send control
-        if (u[0, 0] < -5):
-            u[0, 0] = -5
-        elif (u[0, 0] > 5):
-            u[0, 0] = 5
-        if (u[1, 0] < -5):
-            u[1, 0] = -5
-        elif (u[1, 0] > 5):
-            u[1, 0] = 5
+        if (u[0, 0] < -8):
+            u[0, 0] = -8
+        elif (u[0, 0] > 8):
+            u[0, 0] = 8
+        if (u[1, 0] < -8):
+            u[1, 0] = -8
+        elif (u[1, 0] > 8):
+            u[1, 0] = 8
         self.pub_wr.publish(u[0, 0])
         self.pub_wl.publish(u[1, 0])
         
@@ -98,7 +91,12 @@ class PoseControl:
         self.sensorVect[0, 0] = msg.x
         self.sensorVect[1, 0] = msg.y 
         self.sensorVect[2, 0] = msg.theta 
-        
+    
+    def isRobotClose(self):
+        x = self.q_deseada[0,0] - self.threshold < self.sensorVect[0,0] <  self.q_deseada[0,0] + self.threshold
+        y = self.q_deseada[0,0] - self.threshold < self.sensorVect[0,0] <  self.q_deseada[0,0] + self.threshold
+
+        return x and y
 
     def stop(self):
         # Set deseada as actual
@@ -108,7 +106,7 @@ class PoseControl:
     
 if __name__ == "__main__":
         # 3 cm threshold
-    control = PoseControl(0.048, 0.1, 0.3, threshold= 0.03)
+    control = PoseControl(0.048, 0.1, 0.3, threshold= 0.1, repsInSec = 40)
     while not rospy.is_shutdown():
         control.run_control()
         control.rate.sleep()
