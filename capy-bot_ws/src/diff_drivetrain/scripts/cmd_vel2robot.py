@@ -30,23 +30,25 @@ class Cmd_velControl:
         self.cmd[0,0] = msg.linear.x
         self.cmd[1,0]  = msg.angular.z
         # Send control
-        self.set_smooth_cmd
+        self.set_smooth_cmd()
 
     def set_smooth_cmd(self):
         # Older method:
 
-        # # wl = self.scale*(2*x - w)/2
-        # # wr = self.scale*(2*x + w)/2
-
+        wl = self.scale*(2*self.cmd[0,0] - self.cmd[1,0])/2
+        wr = self.scale*(2*self.cmd[0,0] + self.cmd[1,0])/2
+	self.pub_wl.publish(wl)
+	self.pub_wr.publish(wr)
+	"""
         # New method
-        A = np.array([[self.r/2, self.r/2],
+        A = self.scale*np.array([[self.r/2, self.r/2],
                       [self.r/self.d, -self.r/self.d]])
 
         u = np.dot( np.linalg.inv(A), self.cmd)
         self.pub_wr.publish(u[0,0])
         self.pub_wl.publish(u[1,0])
-        
+   	"""     
 
 if __name__ == "__main__":
-    name_node = Cmd_velControl(2)
+    name_node = Cmd_velControl(2.0)
     rospy.spin()
