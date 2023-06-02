@@ -10,7 +10,7 @@ class PoseControl:
         rospy.loginfo("Starting PoseControl as control")
         
         # ===== Subscribers =====
-        self.sub_pose = rospy.Subscriber("/robot/pose", Pose2D, self.get_poseRobot)
+        self.sub_pose = rospy.Subscriber("/robot/kalmanPose", Pose2D, self.get_poseRobot)
         self.sub_poseD = rospy.Subscriber("/robot/objective", Pose2D, self.get_poseDeseada)
 
         # ===== Publishers =====

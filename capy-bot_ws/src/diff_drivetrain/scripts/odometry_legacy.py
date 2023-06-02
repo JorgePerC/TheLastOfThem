@@ -21,8 +21,8 @@ class Odometry:
         rospy.loginfo("Starting ROSNode as odometry.")
 
         # ===== Subscribers =====
-        self.sub_wl = rospy.Subscriber("/robot/wl", Float32, self.get_wl)
-        self.sub_wr = rospy.Subscriber("/robot/wr", Float32, self.get_wr)
+        self.sub_wl = rospy.Subscriber("/robot/wl", Float32, self.wl_callback)
+        self.sub_wr = rospy.Subscriber("/robot/wr", Float32, self.wr_callback)
     
         # ===== Publishers =====
         self.pub_pose = rospy.Publisher("/robot/pose", Pose2D, queue_size=10)
@@ -41,11 +41,14 @@ class Odometry:
         self.rate = rospy.Rate(tmsInSec)
         self.dt = 1.0/tmsInSec
 
+        self.wr = 0.0
+        self.wl = 0.0
+
         # ===== Shutdown =====
         rospy.on_shutdown(self.stop)
     
     def wr_callback(self, velocity):
-        self.wr = velocity.data
+        self.wr = -velocity.data
 
     def wl_callback(self, velocity):
         self.wl = velocity.data
@@ -55,9 +58,8 @@ class Odometry:
 
     def main(self):
         while not rospy.is_shutdown():
-            
             distance = self.r * (self.wr + self.wl) * 0.5 * self.dt
-            self.pose.theta += self.r * (self.wr - self.wl) / self.l * self.dt
+            self.pose.theta += self.r * (self.wr - self.wl) / self.d * self.dt
 
             if self.pose.theta < -np.pi:
                 self.pose.theta += 2*np.pi
@@ -70,7 +72,7 @@ class Odometry:
             self.pose.x += xd
             self.pose.y += yd
 
-            self.pub.publish(self.pose)
+            self.pub_pose.publish(self.pose)
 
             self.rate.sleep()
 
