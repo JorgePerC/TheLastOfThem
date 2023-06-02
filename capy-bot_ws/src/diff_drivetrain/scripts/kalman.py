@@ -8,16 +8,16 @@ from nav_msgs.msg import Odometry
 import tf
 
 class KalmanOdometry:
-    def __init__(self, odomFreq, repsInSec = 25):
+    def __init__(self, repsInSec = 25):
         rospy.init_node("KalmanOdometry")
         rospy.loginfo("Starting ROSNode as Kalman odometry.")
         
         # ===== Subscribers =====
         self.sub_pose = rospy.Subscriber("/robot/pose", Pose2D, self.get_poseEncoder)
-        self.sub_poseVisual = rospy.Subscriber("/robot/pose", Odometry, self.get_poseVisual)
+        self.sub_poseVisual = rospy.Subscriber("rtabmap/odom", Odometry, self.get_poseVisual)
 
         # ===== Publishers =====
-        self.pub_poseK = rospy.Publisher("/robot/kalmanPose", Pose2D, queue_size=10)
+        self.pub_poseK = rospy.Publisher("/robot/kalmanPose", Pose2D, queue_size=5)
         self.pubish_tf  = tf.TransformBroadcaster()
         
         # ===== Params =====
@@ -57,7 +57,7 @@ class KalmanOdometry:
                                         [0.0, 0.0, 1.0]]) 
         # Aka P
             # Covariance from state estimation
-            # This is system wide 
+            # This is system wide
         self.prediction_Cov_Mat = np.array([ [0.0, 0.0, 0.0], 
                                             [0.0, 0.0, 0.0],
                                             [0.0, 0.0, 0.0]])
@@ -70,8 +70,7 @@ class KalmanOdometry:
                         self.r/2*np.sin(self.xP[2,0]) - self.h*self.r/self.d*np.cos(self.xP[2,0]), 0],
                 [self.r/self.d, 
                         -self.r/self.d, 0]])
-	"""
-
+	    """
 
     def runKalman(self):
         # We just use this to publish the new stimation
@@ -87,8 +86,9 @@ class KalmanOdometry:
         # This method should be called whenever 
         # there's a new sensor reading
         now = rospy.Time.now()
-        self.dt = now.secs - self.lasTime.secs
+        self.dt =  abs((now.nsecs - self.lasTime.nsecs)/1000000000.0)
         self.lasTime = now
+        
 
     def get_poseVisual(self, msg):
 
@@ -126,7 +126,7 @@ class KalmanOdometry:
                 np.matmul(self.statesSensor.T,
                     np.matmul(
                         np.linalg.inv(visualOdom_Cov_Mat),
-                        (visOdom_sensor-np.matmul(self.statesSensor, 
+                        (visOdom_sensor - np.matmul(self.statesSensor, 
                                                     self.xP))))))
 
         # Update prediction covariance matrix
@@ -139,8 +139,6 @@ class KalmanOdometry:
                         np.matmul(np.linalg.inv(visualOdom_Cov_Mat),
                             np.matmul(self.statesSensor, 
                                     self.prediction_Cov_Mat)))))
-        
-        
 
     def get_poseEncoder(self, msg):
         # Aka z
@@ -150,11 +148,9 @@ class KalmanOdometry:
             # y
             # z, but needed for multiplication
                 # Update sensor readout
-        snrVectEncoders = np.array([[0.0, 0.0, 0.0]]).T
-
-        snrVectEncoders[0,0] = msg.x
-        snrVectEncoders[1,0] = msg.y
-        snrVectEncoders[2,0] = msg.theta
+        snrVectEncoders = np.array([[msg.x, 
+                                    msg.y, 
+                                    msg.theta]]).T
         
         self.updateDt()
         
@@ -167,16 +163,16 @@ class KalmanOdometry:
                 [self.r/self.d, 
                         -self.r/self.d, 0]])
 
-
         # Aka R
             # Covariance from sensor input
             # This one is only applied t
         encoder_Cov_Mat = np.array([[0.1, 0.0, 0.0], 
                                         [0.0, 0.1, 0.0],
                                         [0.0, 0.0, 0.8]]) 
+        
         # Update prediction 
         self.xP = self.xP + self.dt*( 
-            np.matmul(self.A,self.xP) +
+            np.matmul(self.A, self.xP) +
             # Kalman filter stuf
             np.matmul(self.prediction_Cov_Mat,
                 np.matmul(self.statesSensor.T,
@@ -184,7 +180,7 @@ class KalmanOdometry:
                         np.linalg.inv(encoder_Cov_Mat),
                         (snrVectEncoders-np.matmul(self.statesSensor, 
                                                     self.xP))))))
-
+        
         # Update prediction covariance matrix
         self.prediction_Cov_Mat = self.prediction_Cov_Mat + self.dt*(
                 np.matmul(self.A, self.prediction_Cov_Mat) + 
@@ -194,12 +190,13 @@ class KalmanOdometry:
                     np.matmul(self.statesSensor.T,
                         np.matmul(np.linalg.inv(encoder_Cov_Mat),
                             np.matmul(self.statesSensor, 
-                            self.prediction_Cov_Mat)))))
+                                    self.prediction_Cov_Mat)))))
+        
     def stop(self):
         rospy.loginfo("Ended Kalman")
 
 if __name__ == "__main__":
-    kOdom = KalmanOdometry(25)
+    kOdom = KalmanOdometry()
     while not rospy.is_shutdown():
         kOdom.runKalman()
         kOdom.rate.sleep()
