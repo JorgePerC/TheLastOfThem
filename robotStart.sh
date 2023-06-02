@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# Launch container and enable visual odometry
+# Move into capybot workspace
+cd /home/capybot/Documents/TheLastOfThem/capy-bot_ws/
 
 # Source capy_ws availabe packages
-source /home/capybot/Documents/TheLastOfThem/capy-bot_ws/devel/setup.bash
+source devel/setup.bash
+
+# Launch realsense camera
+roslaunch realsense2_camera rs_camera.launch 
 
 # Launch controlCapy
-roslaunch diff_drivetrain controlCapy.launch
+#roslaunch diff_drivetrain controlCapy.launch
 
 
