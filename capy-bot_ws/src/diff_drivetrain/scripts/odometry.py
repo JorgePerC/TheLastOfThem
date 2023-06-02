@@ -52,6 +52,9 @@ class Odometry:
         self.pose.x = 0
         self.pose.y = 0
         self.pose.theta = 0 #Odometry.PI/2 TODO: Try alternative
+
+        # To adjust our angle:
+        self.adj = np.array([[0.0, 0.0, 2.0]]).T
         
         # ===== Rate =====
         self.rate = rospy.Rate(tmsInSec)
@@ -89,6 +92,9 @@ class Odometry:
 
         # Calculate the derivative on this itegration
         thisIteration = np.matmul(dMatrix, self.sensorVect)
+
+        # Adjust angle multiplying it by two
+        thisIteration = np.dot(self.adj, thisIteration)
 
         # Update the actual stimation
             # Ideally, this should be the same as the time we run the program on the STM32
