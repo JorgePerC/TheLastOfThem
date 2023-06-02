@@ -101,9 +101,9 @@ class KalmanOdometry:
         self.snrVectOdom[1,0] = msg.y
         self.snrVectOdom[2,0] = msg.theta
         
-	self.updateDt()
+        self.updateDt()
 	
-	# System dynamics
+	    # System dynamics
         self.A = np.array(
                 [[self.r/2*np.cos(self.xP[2,0]) - self.h*self.r/self.d*np.sin(self.xP[2,0]),
                         self.r/2*np.cos(self.xP[2,0]) + self.h*self.r/self.d*np.sin(self.xP[2,0]), 0],
@@ -118,7 +118,7 @@ class KalmanOdometry:
             # This one is only applied t
         sensor_Cov_Mat = np.array([[0.1, 0.0, 0.0], 
                                         [0.0, 0.1, 0.0],
-                                        [0.0, 0.0, 0.8]]) 
+                                        [0.0, 0.0, 1.0]]) 
         # Update prediction 
         self.xP = self.xP + self.dt*( 
             np.matmul(self.A,self.xP) +
