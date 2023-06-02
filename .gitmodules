@@ -2,9 +2,10 @@
 	path = capy-bot_ws/src/rosserial_stm32
 	url = https://github.com/yoneken/rosserial_stm32.git
 
-[submodule "capy-bot_ws/src/mrpt_slam"]
-	path = capy-bot_ws/src/mrpt_slam
-	url = https://github.com/mrpt-ros-pkg/mrpt_slam.git
+# No longer in need
+# [submodule "capy-bot_ws/src/mrpt_slam"]
+# 	path = capy-bot_ws/src/mrpt_slam
+# 	url = https://github.com/mrpt-ros-pkg/mrpt_slam.git
     
 [submodule "capy-bot_ws/src/depthimage_to_laserscan"]
 	path = capy-bot_ws/src/depthimage_to_laserscan

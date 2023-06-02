@@ -10,6 +10,6 @@ source devel/setup.bash
 roslaunch realsense2_camera rs_camera.launch 
 
 # Launch controlCapy
-#roslaunch diff_drivetrain controlCapy.launch
+roslaunch diff_drivetrain kapy.launch
 
 
