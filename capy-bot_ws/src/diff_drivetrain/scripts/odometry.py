@@ -36,7 +36,7 @@ class Odometry:
         # ===== Params =====
         self.r = rospy.get_param("/Capybot/wheelRadius")
         self.d = rospy.get_param("/Capybot/dPoint")
-        self.h = rospy.get_param("/Capybot/wheelDistance")
+        self.h = 0
 
         # ===== Class attributes =====
         # Sensor vector
@@ -54,7 +54,7 @@ class Odometry:
         self.pose.theta = 0 #Odometry.PI/2 TODO: Try alternative
 
         # To adjust our angle:
-        self.adj = np.array([[1.0, 1.0, 0.5]]).T
+        self.adj = np.array([[1.0, 1.0, 1.0]]).T
         
         # ===== Rate =====
         self.rate = rospy.Rate(tmsInSec)
@@ -68,7 +68,7 @@ class Odometry:
         self.sensorVect[0, 0] = msg.data 
         
     def get_wr(self, msg):
-        self.sensorVect[1, 0] = -msg.data
+        self.sensorVect[1, 0] = msg.data
 
     def stop(self):
         rospy.loginfo("Ended odometry")
@@ -81,17 +81,17 @@ class Odometry:
         
         # Transformation matrix 
         dMatrix = np.array([
-            [self.r/2*np.cos( self.pose.theta ) - self.h*self.r/self.d*np.sin( self.pose.theta ), 
-                self.r/2*np.cos( self.pose.theta ) + self.h*self.r/self.d*np.sin( self.pose.theta ), 0],
+            [self.r*np.cos(self.pose.theta)/2 - self.h*self.r*np.sin(self.pose.theta)/self.d, 
+                self.r*np.cos(self.pose.theta)/2 + self.h*self.r*np.sin(self.pose.theta)/self.d, 0],
 
-            [self.r/2*np.sin( self.pose.theta ) + self.h*self.r/self.d*np.cos( self.pose.theta ), 
-                self.r/2*np.sin( self.pose.theta ) - self.h*self.r/self.d*np.cos( self.pose.theta ), 0],
+            [self.r*np.sin(self.pose.theta)/2 + self.h*self.r*np.cos(self.pose.theta)/self.d, 
+                self.r*np.sin(self.pose.theta)/2 - self.h*self.r*np.cos(self.pose.theta)/self.d, 0],
 
             [self.r/self.d, 
                 -self.r/self.d, 0]])
 
         # Calculate the derivative on this itegration
-        thisIteration = self.adj* np.matmul(dMatrix, self.sensorVect)
+        thisIteration = np.matmul(dMatrix, self.sensorVect) #*self.adj
 
         # Adjust angle multiplying it by two
 
@@ -107,7 +107,7 @@ class Odometry:
         elif (self.pose.theta < -Odometry.PI):
             self.pose.theta += 2*Odometry.PI
 
-        #print(self.dt )
+        # print(self.dt )
         # print("x: ", self.pose.x, "y: ", self.pose.y )
         # self.pubish_tf.sendTransform((msg.x, msg.y, 0),
         #     tf.transformations.quaternion_from_euler(0, 0, msg.theta),

@@ -40,7 +40,7 @@ class KalmanOdometry:
         # Aka. q (estado inicial)
         self.xP = np.array([[0.0, 0.0, 0.0]]).T
 
-        self.K = np.array([[1, 0, 0], 
+        self.K = np.array([ [1, 0, 0], 
                             [0, 2, 0], 
                             [0, 0, 0]])
 
@@ -58,19 +58,10 @@ class KalmanOdometry:
         # Aka P
             # Covariance from state estimation
             # This is system wide
-        self.prediction_Cov_Mat = np.array([ [0.0, 0.0, 0.0], 
+        self.prediction_Cov_Mat = np.array([[0.0, 0.0, 0.0], 
                                             [0.0, 0.0, 0.0],
                                             [0.0, 0.0, 0.0]])
-        """
-        # System dynamics
-        self.A = np.array(
-                [[self.r/2*np.cos(self.xP[2,0]) - self.h*self.r/self.d*np.sin(self.xP[2,0]),
-                        self.r/2*np.cos(self.xP[2,0]) + self.h*self.r/self.d*np.sin(self.xP[2,0]), 0],
-                [self.r/2*np.sin(self.xP[2,0]) + self.h*self.r/self.d*np.cos(self.xP[2,0]), 
-                        self.r/2*np.sin(self.xP[2,0]) - self.h*self.r/self.d*np.cos(self.xP[2,0]), 0],
-                [self.r/self.d, 
-                        -self.r/self.d, 0]])
-	    """
+
 
     def runKalman(self):
         # We just use this to publish the new stimation
@@ -88,7 +79,15 @@ class KalmanOdometry:
         now = rospy.Time.now()
         self.dt =  abs((now.nsecs - self.lasTime.nsecs)/1000000000.0)
         self.lasTime = now
-        
+
+    def updateA(self):
+        self.A = np.array(
+                [[self.r*np.cos(self.xP[2,0])/2 - self.h*self.r*np.sin(self.xP[2,0])/self.d,
+                        self.r*np.cos(self.xP[2,0])/2 + self.h*self.r*np.sin(self.xP[2,0])/self.d, 0],
+                [self.r*np.sin(self.xP[2,0])/2 + self.h*self.r*np.cos(self.xP[2,0])/self.d, 
+                        self.r*np.sin(self.xP[2,0])/2 - self.h*self.r*np.cos(self.xP[2,0])/self.d, 0],
+                [self.r/self.d, 
+                        -self.r/self.d, 0]])
 
     def get_poseVisual(self, msg):
 
@@ -98,17 +97,13 @@ class KalmanOdometry:
         visOdom_sensor[1,0] = msg.pose.pose.position.y
         visOdom_sensor[2,0] = msg.pose.pose.orientation.w
 
+        if np.isnan(visOdom_sensor[0,0]):
+            return
         # Update time since last int
         self.updateDt()
 
         # System dynamics
-        self.A = np.array(
-                [[self.r/2*np.cos(self.xP[2,0]) - self.h*self.r/self.d*np.sin(self.xP[2,0]),
-                        self.r/2*np.cos(self.xP[2,0]) + self.h*self.r/self.d*np.sin(self.xP[2,0]), 0],
-                [self.r/2*np.sin(self.xP[2,0]) + self.h*self.r/self.d*np.cos(self.xP[2,0]), 
-                        self.r/2*np.sin(self.xP[2,0]) - self.h*self.r/self.d*np.cos(self.xP[2,0]), 0],
-                [self.r/self.d, 
-                        -self.r/self.d, 0]])
+        self.updateA()
 
         # Aka R
             # Covariance from virtual sensor 
@@ -120,7 +115,7 @@ class KalmanOdometry:
                                         [0.0, 0.0, 0.4]]) 
         # Update prediction 
         self.xP = self.xP + self.dt*( 
-            np.matmul(self.A,self.xP) +
+            np.matmul(self.A, self.xP) +
             # Kalman filter stuf
             np.matmul(self.prediction_Cov_Mat,
                 np.matmul(self.statesSensor.T,
@@ -152,23 +147,18 @@ class KalmanOdometry:
                                     msg.y, 
                                     msg.theta]]).T
         
+        # Update time
         self.updateDt()
         
         # System dynamics
-        self.A = np.array(
-                [[self.r/2*np.cos(self.xP[2,0]) - self.h*self.r/self.d*np.sin(self.xP[2,0]),
-                        self.r/2*np.cos(self.xP[2,0]) + self.h*self.r/self.d*np.sin(self.xP[2,0]), 0],
-                [self.r/2*np.sin(self.xP[2,0]) + self.h*self.r/self.d*np.cos(self.xP[2,0]), 
-                        self.r/2*np.sin(self.xP[2,0]) - self.h*self.r/self.d*np.cos(self.xP[2,0]), 0],
-                [self.r/self.d, 
-                        -self.r/self.d, 0]])
+        self.updateA()
 
         # Aka R
             # Covariance from sensor input
             # This one is only applied t
         encoder_Cov_Mat = np.array([[0.1, 0.0, 0.0], 
-                                        [0.0, 0.1, 0.0],
-                                        [0.0, 0.0, 0.8]]) 
+                                    [0.0, 0.1, 0.0],
+                                    [0.0, 0.0, 2.0]]) 
         
         # Update prediction 
         self.xP = self.xP + self.dt*( 
@@ -183,14 +173,14 @@ class KalmanOdometry:
         
         # Update prediction covariance matrix
         self.prediction_Cov_Mat = self.prediction_Cov_Mat + self.dt*(
-                np.matmul(self.A, self.prediction_Cov_Mat) + 
-                np.matmul(self.prediction_Cov_Mat, self.A.T) +
-                self.model_Cov_Mat -
-                np.matmul(self.prediction_Cov_Mat,
-                    np.matmul(self.statesSensor.T,
-                        np.matmul(np.linalg.inv(encoder_Cov_Mat),
-                            np.matmul(self.statesSensor, 
-                                    self.prediction_Cov_Mat)))))
+            np.matmul(self.A, self.prediction_Cov_Mat) + 
+            np.matmul(self.prediction_Cov_Mat, self.A.T) +
+            self.model_Cov_Mat -
+            np.matmul(self.prediction_Cov_Mat,
+                np.matmul(self.statesSensor.T,
+                    np.matmul(np.linalg.inv(encoder_Cov_Mat),
+                        np.matmul(self.statesSensor, 
+                                self.prediction_Cov_Mat)))))
         
     def stop(self):
         rospy.loginfo("Ended Kalman")

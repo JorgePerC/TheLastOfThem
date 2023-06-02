@@ -48,7 +48,7 @@ class Odometry:
         rospy.on_shutdown(self.stop)
     
     def wr_callback(self, velocity):
-        self.wr = -velocity.data
+        self.wr = velocity.data
 
     def wl_callback(self, velocity):
         self.wl = velocity.data
