@@ -21,6 +21,12 @@
 [submodule "capy-bot_ws/src/rosserial"]
 	path = capy-bot_ws/src/rosserial
 	url = https://github.com/ros-drivers/rosserial.git
-[submodule "capy-bot_ws/src/rtabmap_ros"]
-	path = capy-bot_ws/src/rtabmap_ros
-	url = https://github.com/introlab/rtabmap_ros.git
+[submodule "capy-bot_ws/src/mpu_6050_driver"]
+	path = capy-bot_ws/src/mpu_6050_driver
+	url = https://github.com/OSUrobotics/mpu_6050_driver.git
+[submodule "capy-bot_ws/src/imu_tools"]
+	path = capy-bot_ws/src/imu_tools
+	url = https://github.com/CCNYRoboticsLab/imu_tools
+[submodule "capy-bot_ws/src/rplidar_ros"]
+	path = capy-bot_ws/src/rplidar_ros
+	url = https://github.com/Slamtec/rplidar_ros.git
