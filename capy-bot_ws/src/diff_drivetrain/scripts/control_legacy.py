@@ -10,11 +10,12 @@ from geometry_msgs.msg import Pose2D
 class Control:
     def __init__(self, kt, kr, repsInSec, threshold):
         rospy.init_node("poseControl")
-        self.pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
+        self.pub_wl = rospy.Publisher("/robot/set_wl", Float32, queue_size=5)
+        self.pub_wr = rospy.Publisher("/robot/set_wr", Float32, queue_size=5)
         #rospy.Subscriber("/position", Twist, self.pos_callback)
         #rospy.Subscriber("/step", Twist, self.step_callback)
         #ospy.Subscriber("/go", Bool, self.go_callback)
-
+        self.scale = 2
 
         self.sub_pose = rospy.Subscriber("/robot/pose", Pose2D, self.get_poseRobot)
         self.sub_poseD = rospy.Subscriber("/robot/objective", Pose2D, self.get_poseDeseada)
@@ -23,12 +24,11 @@ class Control:
         self.rate = rospy.Rate(repsInSec)
         self.dt = 1.0/repsInSec
 
-        rospy.on_shutdown(self.stop)
 
         # ===== Params =====
-        self.r = rospy.get_param("/Capybot/wheelRadius")
-        self.d = rospy.get_param("/Capybot/dPoint")
-        self.h = rospy.get_param("/Capybot/wheelDistance")
+        #self.r = rospy.get_param("/Capybot/wheelRadius")
+        #self.d = rospy.get_param("/Capybot/dPoint")
+        #self.h = rospy.get_param("/Capybot/wheelDistance")
 
         self.threshold = threshold
 
@@ -49,20 +49,22 @@ class Control:
         self.vel.angular.x = 0
         self.vel.angular.y = 0
         self.vel.angular.z = 0
+	
+        rospy.on_shutdown(self.stop)
 
-    def pos_callback(self, pos):
-        self.x = pos.linear.x
-        self.y = pos.linear.y
-        self.theta = pos.angular.z
 
-    def step_callback(self, goal):
+    def get_poseRobot(self, pos):
+        self.x = pos.x
+        self.y = pos.y
+        self.theta = pos.theta
+
+    def get_poseDeseada(self, goal):
         self.xd = goal.x
         self.yd = goal.y
 
     def stop(self):
-        self.vel.linear.x = 0
-        self.vel.angular.z = 0
-        self.pub.publish(self.vel)
+        self.pub_wl.publish(0)
+        self.pub_wr.publish(0)
 
     def main(self):
         while not rospy.is_shutdown():
@@ -81,19 +83,23 @@ class Control:
                 v = self.kt*sqrt(xe**2+ye**2)
                 omega = -self.kr*thetae
 
-                if v > 0.5:
-                    v = 0.5
-                if omega > pi/8:
-                    omega = pi/8
-                elif omega < -pi/8:
-                    omega = -pi/8
+                if v > 2.0:
+                    v = 2.0
+                if omega > pi/4:
+                    omega = pi/4
+                elif omega < -pi/4:
+                    omega = -pi/4
 
                 #v = v*(1-tanh(abs(alpha)*2))
 
                 self.vel.linear.x = v
                 self.vel.angular.z = omega
 
-                self.pub.publish(self.vel)
+                wl = self.scale*(2*v - omega)/2
+                wr = self.scale*(2*v + omega)/2
+
+                self.pub_wl.publish(wl)
+                self.pub_wr.publish(wr)
 
             else:
                 self.stop()
@@ -104,7 +110,7 @@ class Control:
 
 if __name__ == '__main__':
     try:
-        node = Control(0.7, 0.2, 40, 0.01)
+        node = Control(kt =10.0, kr =6, repsInSec=40, threshold=0.05)
         node.main()
 
     except rospy.ROSInterruptException:

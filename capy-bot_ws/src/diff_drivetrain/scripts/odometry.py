@@ -4,14 +4,14 @@ import numpy as np
 
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Pose2D
-import tf
+
 
 class Odometry:
         # Static variables
     PI = 3.1416
     g = 9.81
 
-    def __init__(self, tmsInSec = 25):
+    def __init__(self, tmsInSec = 40):
         rospy.init_node("odometry")
         # ===== Wait for STM32 ===== 
         try:
@@ -31,7 +31,6 @@ class Odometry:
 
         # ===== Publishers =====
         self.pub_pose = rospy.Publisher("/robot/pose", Pose2D, queue_size=10)
-        self.pubish_tf  = tf.TransformBroadcaster()
         
         # ===== Params =====
         self.r = rospy.get_param("/Capybot/wheelRadius")
@@ -45,6 +44,8 @@ class Odometry:
             # 0, but needed for multiplication
         self.sensorVect = np.array([[0.0, 0.0, 0.0]]).T
 
+        self.u = np.array([[0.0, 0.0, 0.0]]).T
+
         # Integration for robot pose
             # We asume 0 as start
             # This is actually odom
@@ -55,7 +56,7 @@ class Odometry:
 
         # To adjust our angle:
         self.adj = np.array([[1.0, 1.0, 1.0]]).T
-        
+        self.angVel = 0
         # ===== Rate =====
         self.rate = rospy.Rate(tmsInSec)
         self.dt = 1.0/tmsInSec
@@ -69,7 +70,7 @@ class Odometry:
         
     def get_wr(self, msg):
         self.sensorVect[1, 0] = msg.data
-
+    
     def stop(self):
         rospy.loginfo("Ended odometry")
     
@@ -89,6 +90,13 @@ class Odometry:
 
             [self.r/self.d, 
                 -self.r/self.d, 0]])
+        
+        ### Trying something new
+        #F = np.array([[1.0, 0, 0],
+        #              [0, 1.0, 0],
+        #              [0, 0, 1.0]])
+        
+        #thisIteration = np.dot(F, self.sensorVect) + np.dot(dMatrix, self.u)
 
         # Calculate the derivative on this itegration
         thisIteration = np.matmul(dMatrix, self.sensorVect) #*self.adj
@@ -102,18 +110,11 @@ class Odometry:
         self.pose.theta = self.pose.theta + thisIteration[2, 0] *self.dt
 
         # Limit theta angle
-        if (self.pose.theta > Odometry.PI):
-            self.pose.theta -= 2*Odometry.PI
-        elif (self.pose.theta < -Odometry.PI):
-            self.pose.theta += 2*Odometry.PI
-
-        # print(self.dt )
-        # print("x: ", self.pose.x, "y: ", self.pose.y )
-        # self.pubish_tf.sendTransform((msg.x, msg.y, 0),
-        #     tf.transformations.quaternion_from_euler(0, 0, msg.theta),
-        #     rospy.Time.now(),
-        #     turtlename,
-        #     "world")
+        self.pose.theta = self.pose.theta%2*Odometry.PI
+        # if (self.pose.theta > Odometry.PI):
+        #     self.pose.theta -= 2*Odometry.PI
+        # elif (self.pose.theta < -Odometry.PI):
+        #     self.pose.theta += 2*Odometry.PI
         
         self.pub_pose.publish(self.pose)
     

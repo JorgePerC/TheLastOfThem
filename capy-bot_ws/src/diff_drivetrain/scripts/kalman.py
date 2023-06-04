@@ -4,18 +4,21 @@ import numpy as np
 
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 import tf
+from sensor_msgs.msg import Imu
 
 class KalmanOdometry:
-    def __init__(self, repsInSec = 25):
+    def __init__(self, repsInSec = 40):
         rospy.init_node("KalmanOdometry")
         rospy.loginfo("Starting ROSNode as Kalman odometry.")
         
         # ===== Subscribers =====
         self.sub_pose = rospy.Subscriber("/robot/pose", Pose2D, self.get_poseEncoder)
-        self.sub_poseVisual = rospy.Subscriber("rtabmap/odom", Odometry, self.get_poseVisual)
-
+        self.sub_poseVisual = rospy.Subscriber("/slam_out_pose", PoseStamped, self.get_poseVisual)
+        #self.sub_imu = rospy.Subscriber("/imu/data", Imu, self.get_imu)
+        
         # ===== Publishers =====
         self.pub_poseK = rospy.Publisher("/robot/kalmanPose", Pose2D, queue_size=5)
         self.pubish_tf  = tf.TransformBroadcaster()
@@ -61,7 +64,7 @@ class KalmanOdometry:
         self.prediction_Cov_Mat = np.array([[0.0, 0.0, 0.0], 
                                             [0.0, 0.0, 0.0],
                                             [0.0, 0.0, 0.0]])
-
+        np.seterr(divide='ignore', over = 'ignore', under = 'ignore', invalid= 'ignore')
 
     def runKalman(self):
         # We just use this to publish the new stimation
@@ -88,6 +91,48 @@ class KalmanOdometry:
                         self.r*np.sin(self.xP[2,0])/2 - self.h*self.r*np.cos(self.xP[2,0])/self.d, 0],
                 [self.r/self.d, 
                         -self.r/self.d, 0]])
+
+    def get_imu(self, msg):
+        #Update time
+        self.updateDt()
+        # System dynamics
+        self.updateA()
+
+        imu_sensor = np.array([[0.0, 0.0, 0.0]]).T
+        
+        int_accX = msg.linear_acceleration.z*self.dt
+        int_accY = msg.linear_acceleration.y*self.dt
+
+        # Update
+        imu_sensor[0,0] = int_accX
+        imu_sensor[1,0] = int_accY
+        imu_sensor[2,0] = msg.angular_velocity.x
+
+        
+        gyro_Cov_Mat = np.array([[100.0, 0.0, 0.0], 
+                                [0.0, 100.0, 0.0],
+                                [0.0, 0.0, 10.0]]) 
+        # Update prediction 
+        self.xP = self.xP + self.dt*( 
+            np.matmul(self.A, self.xP) +
+            # Kalman filter stuf
+            np.matmul(self.prediction_Cov_Mat,
+                np.matmul(self.statesSensor.T,
+                    np.matmul(
+                        np.linalg.inv(gyro_Cov_Mat),
+                        (imu_sensor - np.matmul(self.statesSensor, 
+                                                    self.xP))))))
+
+        # Update prediction covariance matrix
+        self.prediction_Cov_Mat = self.prediction_Cov_Mat + self.dt*(
+                np.matmul(self.A, self.prediction_Cov_Mat) + 
+                np.matmul(self.prediction_Cov_Mat, self.A.T) +
+                self.model_Cov_Mat -
+                np.matmul(self.prediction_Cov_Mat,
+                    np.matmul(self.statesSensor.T,
+                        np.matmul(np.linalg.inv(gyro_Cov_Mat),
+                            np.matmul(self.statesSensor, 
+                                    self.prediction_Cov_Mat)))))
 
     def get_poseVisual(self, msg):
 
@@ -156,9 +201,9 @@ class KalmanOdometry:
         # Aka R
             # Covariance from sensor input
             # This one is only applied t
-        encoder_Cov_Mat = np.array([[0.1, 0.0, 0.0], 
-                                    [0.0, 0.1, 0.0],
-                                    [0.0, 0.0, 2.0]]) 
+        encoder_Cov_Mat = np.array([[0.2, 0.0, 0.0], 
+                                    [0.0, 0.2, 0.0],
+                                    [0.0, 0.0, 15.0]]) 
         
         # Update prediction 
         self.xP = self.xP + self.dt*( 
