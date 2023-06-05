@@ -1,8 +1,0 @@
-topics:
-  rgb: "/camera/color/image_raw"
-  depth: "/camera/depth/image_rect_raw"
-  out: "pcloud"
-camera:
-  k: [617.011962890625, 616.731689453125, 329.9867248535156, 240.17185974121094]
-  d: 8
-  scale: 0.001
