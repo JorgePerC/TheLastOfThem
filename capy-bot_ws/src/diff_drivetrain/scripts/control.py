@@ -3,6 +3,7 @@ import rospy
 import numpy as np
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Pose2D
+from nav_msgs.msg import Odometry
 
 class PoseControl:
     def __init__(self, threshold , repsInSec = 25):
@@ -10,7 +11,7 @@ class PoseControl:
         rospy.loginfo("Starting PoseControl as control")
         
         # ===== Subscribers =====
-        self.sub_pose = rospy.Subscriber("/robot/kalmanPose", Pose2D, self.get_poseRobot)
+        self.sub_pose = rospy.Subscriber("/robot/kalmanPose", Odometry, self.get_poseRobot)
         self.sub_poseD = rospy.Subscriber("/robot/objective", Pose2D, self.get_poseDeseada)
 
         # ===== Publishers =====
@@ -102,9 +103,9 @@ class PoseControl:
         self.q_deseada[1, 0] = msg.y 
 
     def get_poseRobot(self, msg):
-        self.sensorVect[0, 0] = msg.x
-        self.sensorVect[1, 0] = msg.y 
-        self.sensorVect[2, 0] = msg.theta 
+        self.sensorVect[0, 0] = msg.pose.pose.position.x
+        self.sensorVect[1, 0] = msg.pose.pose.position.y 
+        self.sensorVect[2, 0] = msg.pose.pose.orientation.w 
     
     def isRobotClose(self):
         x = self.q_deseada[0,0] - self.threshold < self.sensorVect[0,0] <  self.q_deseada[0,0] + self.threshold

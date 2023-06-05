@@ -11,9 +11,8 @@
 
     <!-- ===== Launch Odometry Node ===== -->
     <node name="odom" pkg="diff_drivetrain" type="odometry_legacy.py" output="screen"/>
-    <node name="remapControl" pkg="diff_drivetrain" type="cmd_vel2robot.py" output="screen"/>
+    <!-- ===== Launch Kalman Node ===== -->
     <node name="kalman" pkg="diff_drivetrain" type="kalman.py" output="screen"/>
-        <!-- Can even do so with different names -->
     
 
 </launch>

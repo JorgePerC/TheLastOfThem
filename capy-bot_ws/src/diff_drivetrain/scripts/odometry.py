@@ -3,11 +3,12 @@ import rospy
 import numpy as np
 
 from std_msgs.msg import Float32
+from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose2D
 
 
-class Odometry:
-        # Static variables
+class OdometryRover:
+    # Static variables
     PI = 3.1416
     g = 9.81
 
@@ -30,7 +31,7 @@ class Odometry:
         self.sub_wr = rospy.Subscriber("/robot/wr", Float32, self.get_wr)
 
         # ===== Publishers =====
-        self.pub_pose = rospy.Publisher("/robot/pose", Pose2D, queue_size=10)
+        self.pub_pose = rospy.Publisher("/robot/noisyOdom", Odometry, queue_size=5)
         
         # ===== Params =====
         self.r = rospy.get_param("/Capybot/wheelRadius")
@@ -49,10 +50,12 @@ class Odometry:
         # Integration for robot pose
             # We asume 0 as start
             # This is actually odom
-        self.pose = Pose2D()
-        self.pose.x = 0
-        self.pose.y = 0
-        self.pose.theta = 0 #Odometry.PI/2 TODO: Try alternative
+        self.p = Odometry()
+        self.p.header.frame_id = "robot_frame"
+        self.p.pose.pose.position.x = 0
+        self.p.pose.pose.position.y = 0
+        self.p.pose.pose.orientation.w = 0 #Odometry.PI/2 TODO: Try alternative
+
 
         # To adjust our angle:
         self.adj = np.array([[1.0, 1.0, 1.0]]).T
@@ -64,7 +67,6 @@ class Odometry:
         # ===== Shutdown =====
         rospy.on_shutdown(self.stop)
         
-
     def get_wl(self, msg):
         self.sensorVect[0, 0] = msg.data 
         
@@ -82,11 +84,11 @@ class Odometry:
         
         # Transformation matrix 
         dMatrix = np.array([
-            [self.r*np.cos(self.pose.theta)/2 - self.h*self.r*np.sin(self.pose.theta)/self.d, 
-                self.r*np.cos(self.pose.theta)/2 + self.h*self.r*np.sin(self.pose.theta)/self.d, 0],
+            [self.r*np.cos(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d, 
+                self.r*np.cos(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d, 0],
 
-            [self.r*np.sin(self.pose.theta)/2 + self.h*self.r*np.cos(self.pose.theta)/self.d, 
-                self.r*np.sin(self.pose.theta)/2 - self.h*self.r*np.cos(self.pose.theta)/self.d, 0],
+            [self.r*np.sin(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d, 
+                self.r*np.sin(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d, 0],
 
             [self.r/self.d, 
                 -self.r/self.d, 0]])
@@ -99,27 +101,26 @@ class Odometry:
         #thisIteration = np.dot(F, self.sensorVect) + np.dot(dMatrix, self.u)
 
         # Calculate the derivative on this itegration
-        thisIteration = np.matmul(dMatrix, self.sensorVect) #*self.adj
+        thisIteration = np.matmul(dMatrix, self.sensorVect) 
 
         # Adjust angle multiplying it by two
 
         # Update the actual stimation
             # Ideally, this should be the same as the time we run the program on the STM32
-        self.pose.x = self.pose.x + thisIteration[0, 0] * self.dt
-        self.pose.y = self.pose.y + thisIteration[1, 0] * self.dt
-        self.pose.theta = self.pose.theta + thisIteration[2, 0] *self.dt
+        self.p.pose.pose.position.x = self.p.x = self.p.x + thisIteration[0, 0] * self.dt
+        self.p.pose.pose.position.y = self.p.x = self.p.y + thisIteration[1, 0] * self.dt
+        self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w + thisIteration[2, 0] *self.dt
 
-        # Limit theta angle
-        self.pose.theta = self.pose.theta%2*Odometry.PI
-        # if (self.pose.theta > Odometry.PI):
-        #     self.pose.theta -= 2*Odometry.PI
-        # elif (self.pose.theta < -Odometry.PI):
-        #     self.pose.theta += 2*Odometry.PI
-        
-        self.pub_pose.publish(self.pose)
+        # Set pose angle
+        self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w%(2*Odometry.PI)
+        # Update time
+        self.p.header.time = rospy.Time.now()
+
+        # Send pose
+        self.pub_pose.publish(self.p)
     
 if __name__ == "__main__":
-    odom = Odometry()
+    odom = OdometryRover()
     while not rospy.is_shutdown():
         odom.runrum()
         odom.rate.sleep()
