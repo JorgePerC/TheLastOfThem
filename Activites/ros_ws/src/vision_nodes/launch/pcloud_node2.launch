@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<!--Llave principal-->
+<launch>
+
+  <!--Nodo1: Particula de RViz-->
+  <node name="pcloud_node" pkg="vision_nodes" type="pcloud_node.py" output="screen">
+  <param name="node_path" type="string" value="$(find vision_nodes)" />
+
+  <!--Metodo1: Cargar desde archivo de configuracion-->
+  <rosparam command="load" file="$(find vision_nodes)/config/params_cloud2.yaml"/>
+  
+  </node>
+
+</launch>

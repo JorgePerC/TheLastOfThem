@@ -155,9 +155,9 @@ class KalmanOdometry:
             # In this case, we actually get the updates
                 # From the odometry message
                 # But for now we ignore it
-        visualOdom_Cov_Mat = np.array([[0.2, 0.0, 0.0], 
-                                        [0.0, 0.2, 0.0],
-                                        [0.0, 0.0, 0.4]]) 
+        visualOdom_Cov_Mat = np.array([[2.0, 0.0, 0.0], 
+                                        [0.0, 2.0, 0.0],
+                                        [0.0, 0.0, 5.0]]) 
         # Update prediction 
         self.xP = self.xP + self.dt*( 
             np.matmul(self.A, self.xP) +
@@ -203,7 +203,7 @@ class KalmanOdometry:
             # This one is only applied t
         encoder_Cov_Mat = np.array([[0.2, 0.0, 0.0], 
                                     [0.0, 0.2, 0.0],
-                                    [0.0, 0.0, 15.0]]) 
+                                    [0.0, 0.0, 10.0]]) 
         
         # Update prediction 
         self.xP = self.xP + self.dt*( 
