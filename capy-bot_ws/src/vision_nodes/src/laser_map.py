@@ -24,6 +24,7 @@ import message_filters
 # Subscriber
 def LaserCallback(msg_odom, msg_laser):
     global edwin, grid_pub
+    print("Message")
 
     # Extraer datos de odometria (traslacion)
     x = msg_odom.pose.pose.position.x
@@ -51,8 +52,8 @@ def LaserCallback(msg_odom, msg_laser):
     # Construir estado del laser
     state_laser = np.vstack([laser_angles, laser_ranges])
 
-    #print("Laser:", state_laser)
-    #print("==================================")
+    print("Laser:", state_laser)
+    print("==================================")
 
     # Actualizar mapa de ocupacion
     edwin.update_laser(state, state_laser)
@@ -80,6 +81,7 @@ def main():
     
     # Inicializar nodo
     rospy.init_node("occupacy_node")
+    rospy.loginfo("Laser map initialized")
 
     # Leer parametros de archivo de configuracion
     ## 1- Topicos de entrada
@@ -113,7 +115,7 @@ def main():
     laser_sub = message_filters.Subscriber(input_laser, LaserScan)
 
     # Crear sincronizador de mensajes
-    ts = message_filters.TimeSynchronizer([odom_sub, laser_sub], queue_size=1)
+    ts = message_filters.ApproximateTimeSynchronizer([odom_sub, laser_sub], queue_size=2, slop=0.5, allow_headerless=True)
 
     # Registrar callback
     ts.registerCallback(LaserCallback)

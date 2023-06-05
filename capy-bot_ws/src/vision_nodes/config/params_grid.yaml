@@ -1,6 +1,6 @@
 topics:
   p_cloud: "/pcloud"
-  odom: "/robot/pose"
+  odom: "/syncOdom"
   laser: "/scan"
 
 grid:
