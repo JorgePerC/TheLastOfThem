@@ -30,3 +30,6 @@
 [submodule "capy-bot_ws/src/rplidar_ros"]
 	path = capy-bot_ws/src/rplidar_ros
 	url = https://github.com/Slamtec/rplidar_ros.git
+[submodule "capy-bot_ws/src/hector_slam"]
+	path = capy-bot_ws/src/hector_slam
+	url = https://github.com/tu-darmstadt-ros-pkg/hector_slam.git
