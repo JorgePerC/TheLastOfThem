@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+
+     <node name="occupacy_grid" pkg="vision_nodes" type="laser_map.py" output="screen">
+  <param name="node_path" type="string" value="$(find vision_nodes)" />
+
+  <!--Metodo1: Cargar desde archivo de configuracion-->
+  <rosparam command="load" file="$(find vision_nodes)/config/params_grid.yaml"/>
+  
+  </node>
+
+</launch>
