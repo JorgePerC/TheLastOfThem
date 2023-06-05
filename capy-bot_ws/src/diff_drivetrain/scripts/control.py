@@ -53,8 +53,8 @@ class PoseControl:
             [self.r*np.sin(self.sensorVect[2,0])/2 + self.h*self.r*np.cos(self.sensorVect[2,0])/self.d, 
                 self.r*np.sin(self.sensorVect[2,0])/2 - self.h*self.r*np.cos(self.sensorVect[2,0])/self.d]])
 
-        K = np.array([  [0.12, 0.0], 
-                        [0.0, 0.24]])
+        K = np.array([  [0.05, 0.0], 
+                        [0.0, 0.10]])
 
         # Calculate error
         estado = np.array([[self.sensorVect[0,0], self.sensorVect[1,0]]]).T

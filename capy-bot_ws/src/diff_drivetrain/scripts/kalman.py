@@ -16,7 +16,7 @@ class KalmanOdometry:
         
         # ===== Subscribers =====
         self.sub_pose = rospy.Subscriber("/robot/noisyOdom", Odometry, self.get_poseEncoder)
-        self.sub_poseVisual = rospy.Subscriber("/slam_out_pose", PoseStamped, self.get_poseVisual)
+        #self.sub_poseVisual = rospy.Subscriber("/slam_out_pose", PoseStamped, self.get_poseVisual)
         #self.sub_imu = rospy.Subscriber("/imu/data", Imu, self.get_imu)
         
         # ===== Publishers =====
@@ -70,14 +70,13 @@ class KalmanOdometry:
         # We just use this to publish the new stimation
         msg2send = Odometry()
         
-        msg2send.header.frame_id = "robot"
+        msg2send.header.frame_id = "world"
         msg2send.header.stamp = rospy.Time.now()
-
 
         msg2send.pose.pose.position.x = self.xP[0,0]
         msg2send.pose.pose.position.y = self.xP[1,0]
         msg2send.pose.pose.orientation.w = self.xP[2,0]
-        
+
         self.pub_poseK.publish(msg2send)
 
     def updateDt(self):
@@ -192,7 +191,6 @@ class KalmanOdometry:
             # y
             # z, but needed for multiplication
                 # Update sensor readout
-        msg = Odometry()
         snrVectEncoders = np.array([[msg.pose.pose.position.x, 
                                     msg.pose.pose.position.y, 
                                     msg.pose.pose.orientation.w]]).T
@@ -208,7 +206,7 @@ class KalmanOdometry:
             # This one is only applied t
         encoder_Cov_Mat = np.array([[0.2, 0.0, 0.0], 
                                     [0.0, 0.2, 0.0],
-                                    [0.0, 0.0, 10.0]]) 
+                                    [0.0, 0.0, 1.0]]) 
         
         # Update prediction 
         self.xP = self.xP + self.dt*( 

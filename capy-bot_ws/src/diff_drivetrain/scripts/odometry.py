@@ -51,7 +51,7 @@ class OdometryRover:
             # We asume 0 as start
             # This is actually odom
         self.p = Odometry()
-        self.p.header.frame_id = "robot_frame"
+        self.p.header.frame_id = "world"
         self.p.pose.pose.position.x = 0
         self.p.pose.pose.position.y = 0
         self.p.pose.pose.orientation.w = 0 #Odometry.PI/2 TODO: Try alternative
@@ -107,14 +107,14 @@ class OdometryRover:
 
         # Update the actual stimation
             # Ideally, this should be the same as the time we run the program on the STM32
-        self.p.pose.pose.position.x = self.p.x = self.p.x + thisIteration[0, 0] * self.dt
-        self.p.pose.pose.position.y = self.p.x = self.p.y + thisIteration[1, 0] * self.dt
+        self.p.pose.pose.position.x = self.p.pose.pose.position.x + thisIteration[0, 0] * self.dt
+        self.p.pose.pose.position.y = self.p.pose.pose.position.y + thisIteration[1, 0] * self.dt
         self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w + thisIteration[2, 0] *self.dt
 
         # Set pose angle
-        self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w%(2*Odometry.PI)
+        self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w%(2*OdometryRover.PI)
         # Update time
-        self.p.header.time = rospy.Time.now()
+        self.p.header.stamp = rospy.Time.now()
 
         # Send pose
         self.pub_pose.publish(self.p)
