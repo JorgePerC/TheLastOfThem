@@ -107,20 +107,6 @@ class OdometryRover:
 
         # Update the actual stimation
             # Ideally, this should be the same as the time we run the program on the STM32
-<<<<<<< HEAD
-        self.pose.x = self.pose.x + thisIteration[0, 0] * self.dt
-        self.pose.y = self.pose.y + thisIteration[1, 0] * self.dt
-        self.pose.theta = self.pose.theta + thisIteration[2, 0] *self.dt
-
-        # Limit theta angle
-        self.pose.theta = self.pose.theta%(2*Odometry.PI)
-        # if (self.pose.theta > Odometry.PI):
-        #     self.pose.theta -= 2*Odometry.PI
-        # elif (self.pose.theta < -Odometry.PI):
-        #     self.pose.theta += 2*Odometry.PI
-        
-        self.pub_pose.publish(self.pose)
-=======
         self.p.pose.pose.position.x = self.p.x = self.p.x + thisIteration[0, 0] * self.dt
         self.p.pose.pose.position.y = self.p.x = self.p.y + thisIteration[1, 0] * self.dt
         self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w + thisIteration[2, 0] *self.dt
@@ -132,7 +118,6 @@ class OdometryRover:
 
         # Send pose
         self.pub_pose.publish(self.p)
->>>>>>> 70912144b5786d382c53494eab9ceea48f62ffe4
     
 if __name__ == "__main__":
     odom = OdometryRover()
