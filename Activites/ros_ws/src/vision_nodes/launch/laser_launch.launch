@@ -1,10 +1,7 @@
 <?xml version="1.0"?>
-
-<!--Llave principal-->
 <launch>
 
-  <!--Nodo1: Particula de RViz-->
-  <node name="occupacy_grid" pkg="vision_nodes" type="laser_map.py" output="screen">
+     <node name="occupacy_grid" pkg="vision_nodes" type="laser_map.py" output="screen">
   <param name="node_path" type="string" value="$(find vision_nodes)" />
 
   <!--Metodo1: Cargar desde archivo de configuracion-->

@@ -71,9 +71,9 @@ class Vision():
             z = self.scale* depth[i, j]
             if(z > 0):
               # Calcular punto en 3D
-              p_3d = z*(self.K_inv@p_2d)
+              p_3d = z*np.matmul(self.K_inv,p_2d)
               # Transformar Camara - RViz
-              p_3d = self.R@p_3d
+              p_3d = np.matmul(self.R, p_3d)
 
               # Extraer color de la imagen
               b = img[i, j, 0]
