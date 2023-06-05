@@ -138,9 +138,9 @@ class KalmanOdometry:
 
         visOdom_sensor = np.array([[0.0, 0.0, 0.0]]).T
         # Update
-        visOdom_sensor[0,0] = msg.pose.pose.position.x
-        visOdom_sensor[1,0] = msg.pose.pose.position.y
-        visOdom_sensor[2,0] = msg.pose.pose.orientation.w
+        visOdom_sensor[0,0] = msg.pose.position.x
+        visOdom_sensor[1,0] = msg.pose.position.y
+        visOdom_sensor[2,0] = msg.pose.orientation.w
 
         if np.isnan(visOdom_sensor[0,0]):
             return

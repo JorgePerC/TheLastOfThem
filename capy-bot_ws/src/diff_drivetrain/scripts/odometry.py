@@ -110,7 +110,7 @@ class Odometry:
         self.pose.theta = self.pose.theta + thisIteration[2, 0] *self.dt
 
         # Limit theta angle
-        self.pose.theta = self.pose.theta%2*Odometry.PI
+        self.pose.theta = self.pose.theta%(2*Odometry.PI)
         # if (self.pose.theta > Odometry.PI):
         #     self.pose.theta -= 2*Odometry.PI
         # elif (self.pose.theta < -Odometry.PI):

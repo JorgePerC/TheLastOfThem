@@ -30,4 +30,14 @@
     <node name="kalman" pkg="diff_drivetrain" type="kalman.py" output="screen"/>
     <!-- ===== Run Control ===== -->
     <node name="control" pkg="diff_drivetrain" type="control.py" output="screen"/>
+
+    <!-- <include file="$(find rplidar_ros)/launch/rplidar_a1.launch" />
+    <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNodeClient" output="screen"> -->
+        <!-- <param name="scan_mode"           type="string"  value="Express"/>
+        <param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
+        <param name="serial_baudrate"     type="int"    value="115200"/>
+        <param name="frame_id"            type="string" value="laser"/>
+        <param name="inverted"            type="bool"   value="false"/>
+        <param name="angle_compensate"    type="bool"   value="true"/> -->
+    <!-- </node> -->
 </launch>
