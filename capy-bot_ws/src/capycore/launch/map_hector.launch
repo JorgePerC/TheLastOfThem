@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- ===== Launch:
+                * params
+                * rosserial
+                * odometry
+                * kalman
+     ===== -->
+    <include file="$(find diff_drivetrain)/launch/lidarKalman.launch" />
+    <!-- ===== Run Control ===== -->
+    <node name="control" pkg="diff_drivetrain" type="control.py" output="screen"/>
+    <!-- ===== Run Mapping Hector ===== -->
+    <!-- <include file="$(find rplidar_ros)/launch/.launch" /> -->
+
+    
+</launch>
