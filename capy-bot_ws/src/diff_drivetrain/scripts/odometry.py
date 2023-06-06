@@ -43,9 +43,9 @@ class OdometryRover:
             # wl
             # wr
             # 0, but needed for multiplication
-        self.sensorVect = np.array([[0.0, 0.0, 0.0]]).T
+        self.sensorVect = np.array([[0.0, 0.0]]).T
 
-        self.u = np.array([[0.0, 0.0, 0.0]]).T
+        self.u = np.array([[0.0, 0.0]]).T
 
         # Integration for robot pose
             # We asume 0 as start
@@ -67,10 +67,10 @@ class OdometryRover:
         # ===== Shutdown =====
         rospy.on_shutdown(self.stop)
         
-    def get_wl(self, msg):
+    def get_wr(self, msg):
         self.sensorVect[0, 0] = msg.data 
         
-    def get_wr(self, msg):
+    def get_wl(self, msg):
         self.sensorVect[1, 0] = msg.data
     
     def stop(self):
@@ -85,20 +85,13 @@ class OdometryRover:
         # Transformation matrix 
         dMatrix = np.array([
             [self.r*np.cos(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d, 
-                self.r*np.cos(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d, 0],
+                self.r*np.cos(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d],
 
             [self.r*np.sin(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d, 
-                self.r*np.sin(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d, 0],
+                self.r*np.sin(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d],
 
             [self.r/self.d, 
-                -self.r/self.d, 0]])
-        
-        ### Trying something new
-        #F = np.array([[1.0, 0, 0],
-        #              [0, 1.0, 0],
-        #              [0, 0, 1.0]])
-        
-        #thisIteration = np.dot(F, self.sensorVect) + np.dot(dMatrix, self.u)
+                -self.r/self.d]])
 
         # Calculate the derivative on this itegration
         thisIteration = np.matmul(dMatrix, self.sensorVect) 
@@ -111,8 +104,8 @@ class OdometryRover:
         self.p.pose.pose.position.y = self.p.pose.pose.position.y + thisIteration[1, 0] * self.dt
         self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w + thisIteration[2, 0] *self.dt
 
-        # Set pose angle
-        self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w%(2*OdometryRover.PI)
+        # Limit pose angle
+        # self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w%(2*OdometryRover.PI)
         # Update time
         self.p.header.stamp = rospy.Time.now()
 

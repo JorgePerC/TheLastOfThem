@@ -26,5 +26,5 @@ class Sync:
             self.rate.sleep()
 
 if __name__ == "__main__":
-    syncOdom = Sync(6.7)
+    syncOdom = Sync(6.9)
     syncOdom.main()

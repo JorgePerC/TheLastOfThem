@@ -51,5 +51,5 @@ class Cmd_velControl:
         '''
 
 if __name__ == "__main__":
-    name_node = Cmd_velControl(1.0)
+    name_node = Cmd_velControl(0.5)
     rospy.spin()
