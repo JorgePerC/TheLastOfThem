@@ -79,6 +79,9 @@ class KalmanOdometry:
 
     def runKalman(self):
         # We just use this to publish the new stimation
+        cy = np.cos(self.xP[2,0] * 0.5)
+        sy = np.sin(self.xP[2,0] * 0.5)
+
         msg2send = Odometry()
         
         msg2send.header.frame_id = "world"
@@ -86,7 +89,12 @@ class KalmanOdometry:
 
         msg2send.pose.pose.position.x = self.xP[0,0]
         msg2send.pose.pose.position.y = self.xP[1,0]
-        msg2send.pose.pose.orientation.w = self.xP[2,0]
+        
+        msg2send.pose.pose.orientation.w = cy
+        msg2send.pose.pose.orientation.x = 0.0
+        msg2send.pose.pose.orientation.y = 0.0
+        msg2send.pose.pose.orientation.z = sy
+
 
         self.pub_poseK.publish(msg2send)
 
@@ -203,25 +211,18 @@ class KalmanOdometry:
         snrVectEncoders = np.array([[msg.pose.pose.position.x, 
                                     msg.pose.pose.position.y, 
                                     msg.pose.pose.orientation.w]]).T
-        
-        self.xP[0,0] = msg.pose.pose.position.x
-        self.xP[1,0] = msg.pose.pose.position.y
-        self.xP[2,0] = msg.pose.pose.orientation.w
-        
-        return
-        
         # Update time
         self.updateDt()
-        
+        self.dt = 0.025
         # System dynamics
         self.updateA()
 
         # Aka R
             # Covariance from sensor input
             # This one is only applied t
-        encoder_Cov_Mat = np.array([[1.0, 0.0, 0.0], 
-                                    [0.0, 1.0, 0.0],
-                                    [0.0, 0.0, 1.0]]) 
+        encoder_Cov_Mat = np.array([[0.5, 0.0, 0.0], 
+                                    [0.0, 0.5, 0.0],
+                                    [0.0, 0.0, 0.8]]) 
         
         # Update prediction 
         self.xP = self.xP + self.dt*( 

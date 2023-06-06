@@ -8,7 +8,7 @@ class Sync:
 
         rospy.init_node("sync")
 
-        self.sub = rospy.Subscriber("/robot/KalmanPose", Odometry, self.get_poseKalman)
+        self.sub = rospy.Subscriber("/robot/kalmanPose", Odometry, self.get_poseKalman)
         self.pub = rospy.Publisher("/syncOdom", Odometry, queue_size=5)
 
         self.rate = rospy.Rate(r)
@@ -22,6 +22,7 @@ class Sync:
 
         while not rospy.is_shutdown():
             self.sync_msg.header.stamp = rospy.Time.now()
+            self.sync_msg.header.frame_id = "laser"
             self.pub.publish(self.sync_msg)
             self.rate.sleep()
 
