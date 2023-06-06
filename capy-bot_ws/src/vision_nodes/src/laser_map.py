@@ -23,8 +23,8 @@ import message_filters
 
 # Subscriber
 def LaserCallback(msg_odom, msg_laser):
-    global edwin, grid_pub
-    print("Message")
+    global occ_grid, grid_pub
+    #print("Message")
 
     # Extraer datos de odometria (traslacion)
     x = msg_odom.pose.pose.position.x
@@ -52,30 +52,30 @@ def LaserCallback(msg_odom, msg_laser):
     # Construir estado del laser
     state_laser = np.vstack([laser_angles, laser_ranges])
 
-    print("Laser:", state_laser)
-    print("==================================")
+    #print("Laser:", state_laser)
+    #print("==================================")
 
     # Actualizar mapa de ocupacion
-    edwin.update_laser(state, state_laser)
+    occ_grid.update_laser(state, state_laser)
 
     # Obtener mapa de ocupacion
-    occ_map = edwin.get_map()
+    occ_map = occ_grid.get_map()
 
     # Obtener mensaje de Rviz
-    occ_rviz = edwin.get_rviz(occ_map, rospy.Time.now())
+    occ_rviz = occ_grid.get_rviz(occ_map, rospy.Time.now())
 
     # Publicar mensaje
     marker_pub.publish(occ_rviz)
 
     # Convertir mapa de ocupacion
-    grid_msg = edwin.map_msg(occ_map, rospy.Time.now())
+    grid_msg = occ_grid.map_msg(occ_map, rospy.Time.now())
 
     # Publicar gradilla (mensaje)
     grid_pub.publish(grid_msg)
 
 def main():
 
-    global edwin, marker_pub
+    global occ_grid, marker_pub
     global display, rviz
     global grid_pub
     
@@ -108,7 +108,7 @@ def main():
     grid_pub = rospy.Publisher("/occupacy_grid/grid_map", GridMap, queue_size=1)
 
     # Crear instancia de mapa de ocupacion
-    edwin = OccGrid(x_g = x_grid, y_g=y_grid, d_g=d_grid)
+    occ_grid = OccGrid(x_g = x_grid, y_g=y_grid, d_g=d_grid, p_thresh=p_thresh, p_occ=p_occ, p_free=p_free)
 
     # Crear subscribers
     odom_sub = message_filters.Subscriber(input_odom, Odometry)

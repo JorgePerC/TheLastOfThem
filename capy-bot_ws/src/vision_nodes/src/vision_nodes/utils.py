@@ -288,7 +288,7 @@ class OccGrid():
         marker = Marker()
         
         # Inicializar marcador
-        marker.header.frame_id = "world"
+        marker.header.frame_id = "laser"
         marker.header.stamp = ros_time
         marker.type = 1
         marker.id = i*occ_map.shape[1] + j

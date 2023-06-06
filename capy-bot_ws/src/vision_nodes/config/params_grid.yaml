@@ -6,7 +6,7 @@ topics:
 grid:
   x: 50
   y: 50
-  dim: 0.4
+  dim: 0.1
 
 params:
   p_thresh: 0.8
@@ -17,5 +17,5 @@ params:
   z_floor: -0.8
 
 interface:
-  display: True
+  display: False
   rviz: True
