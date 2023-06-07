@@ -7,7 +7,40 @@ from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 import tf
-from sensor_msgs.msg import Imu
+import math
+def euler2quaternion(e):
+    # Euler should be formated as
+        # yaw
+        # pitch
+        # roll
+    res = [0, 0, 0, 0]
+
+    cy = np.cos(e[0] * 0.5)
+    sy = np.sin(e[0] * 0.5)
+
+    res[0] = cy         # w
+    res[1] = 0.0        # x
+    res[2] = 0.0        # y
+    res[3] = sy         # z
+    return res
+
+def quaternion_to_euler(q):
+    #Get quaternion
+    (x, y, z, w) = (q[0], q[1], q[2], q[3])
+
+    #Calculate angles
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll = math.atan2(t0, t1)
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch = math.asin(t2)
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw = math.atan2(t3, t4)
+    
+    return [yaw, pitch, roll] 
 
 class KalmanOdometry:
     def __init__(self, repsInSec = 40):
@@ -19,7 +52,7 @@ class KalmanOdometry:
         self.sub_wr = rospy.Subscriber("/robot/wr", Float32, self.get_wl)
         self.sub_wl = rospy.Subscriber("/robot/wl", Float32, self.get_wr)
         self.sub_pose = rospy.Subscriber("/robot/noisyOdom", Odometry, self.get_poseEncoder)
-        #self.sub_poseVisual = rospy.Subscriber("/slam_out_pose", PoseStamped, self.get_poseVisual)
+        self.sub_poseVisual = rospy.Subscriber("/rtabmap/odom", Odometry, self.get_poseVisual)
         #self.sub_imu = rospy.Subscriber("/imu/data", Imu, self.get_imu)
         
         # ===== Publishers =====
@@ -69,6 +102,7 @@ class KalmanOdometry:
         self.prediction_Cov_Mat = np.array([[0.0, 0.0, 0.0], 
                                             [0.0, 0.0, 0.0],
                                             [0.0, 0.0, 0.0]])
+        rospy.sleep(1)
         np.seterr(divide='ignore', over = 'ignore', under = 'ignore', invalid= 'ignore')
     
     def get_wr(self, msg):
@@ -89,11 +123,13 @@ class KalmanOdometry:
 
         msg2send.pose.pose.position.x = self.xP[0,0]
         msg2send.pose.pose.position.y = self.xP[1,0]
-        
-        msg2send.pose.pose.orientation.w = cy
-        msg2send.pose.pose.orientation.x = 0.0
-        msg2send.pose.pose.orientation.y = 0.0
-        msg2send.pose.pose.orientation.z = sy
+
+        q = euler2quaternion([self.xP[2, 0], 0.0, 0.0])
+
+        msg2send.pose.pose.orientation.x = q[0]
+        msg2send.pose.pose.orientation.y = q[1]
+        msg2send.pose.pose.orientation.z = q[2]
+        msg2send.pose.pose.orientation.w = q[3] 
 
 
         self.pub_poseK.publish(msg2send)
@@ -102,7 +138,7 @@ class KalmanOdometry:
         # This method should be called whenever 
         # there's a new sensor reading
         now = rospy.Time.now()
-        self.dt =  abs((now.nsecs - self.lasTime.nsecs)/1000000000.0)
+        self.dt =  (now.nsecs - self.lasTime.nsecs)/1000000000.0
         self.lasTime = now
 
     def updateA(self):
@@ -155,50 +191,54 @@ class KalmanOdometry:
                                     self.prediction_Cov_Mat)))))
 
     def get_poseVisual(self, msg):
-
+        # Aka z
+            # In this case our sensors are exactly the dynamics
         visOdom_sensor = np.array([[0.0, 0.0, 0.0]]).T
         # Update
-        visOdom_sensor[0,0] = msg.pose.position.x
-        visOdom_sensor[1,0] = msg.pose.position.y
-        visOdom_sensor[2,0] = msg.pose.orientation.w
+        visOdom_sensor[0,0] = msg.pose.pose.position.x
+        visOdom_sensor[1,0] = msg.pose.pose.position.y
+        l = [msg.pose.pose.orientation.x,
+             msg.pose.pose.orientation.y,
+             msg.pose.pose.orientation.z,
+             msg.pose.pose.orientation.w]
+        thetas = quaternion_to_euler(l)
+        visOdom_sensor[2,0] = thetas[0]
 
+        # To avoid crashing the estimation
         if np.isnan(visOdom_sensor[0,0]):
+            print("Skipped visual Odom bc it has nulls")
             return
-        # Update time since last int
+
+        # Update time
         self.updateDt()
+        # In case negative, skip integration
+        if  self.dt <= 0:
+            print("Problem with dt")
+            return
 
         # System dynamics
         self.updateA()
 
         # Aka R
-            # Covariance from virtual sensor 
-            # In this case, we actually get the updates
-                # From the odometry message
-                # But for now we ignore it
-        visualOdom_Cov_Mat = np.array([[2.0, 0.0, 0.0], 
-                                        [0.0, 2.0, 0.0],
-                                        [0.0, 0.0, 5.0]]) 
+            # Covariance from sensor input
+            # This one is only applied t
+        visualOdom_Cov_Mat = np.array([ [1.0, 0.0, 0.0], 
+                                        [0.0, 1.0, 0.0],
+                                        [0.0, 0.0, 0.5]]) 
+        
         # Update prediction 
         self.xP = self.xP + self.dt*( 
-            np.matmul(self.A, self.xP) +
-            # Kalman filter stuf
+            np.matmul(self.A, self.U) +
             np.matmul(self.prediction_Cov_Mat,
-                np.matmul(self.statesSensor.T,
-                    np.matmul(
-                        np.linalg.inv(visualOdom_Cov_Mat),
-                        (visOdom_sensor - np.matmul(self.statesSensor, 
-                                                    self.xP))))))
-
+                np.matmul(np.linalg.inv(visualOdom_Cov_Mat),
+                    (visOdom_sensor - self.xP))))
+        
         # Update prediction covariance matrix
         self.prediction_Cov_Mat = self.prediction_Cov_Mat + self.dt*(
-                np.matmul(self.A, self.prediction_Cov_Mat) + 
-                np.matmul(self.prediction_Cov_Mat, self.A.T) +
-                self.model_Cov_Mat -
-                np.matmul(self.prediction_Cov_Mat,
-                    np.matmul(self.statesSensor.T,
-                        np.matmul(np.linalg.inv(visualOdom_Cov_Mat),
-                            np.matmul(self.statesSensor, 
-                                    self.prediction_Cov_Mat)))))
+            self.model_Cov_Mat -
+            np.matmul(self.prediction_Cov_Mat,
+                np.matmul(np.linalg.inv(visualOdom_Cov_Mat),
+                        self.prediction_Cov_Mat)))
 
     def get_poseEncoder(self, msg):
         # Aka z
@@ -208,12 +248,21 @@ class KalmanOdometry:
             # y
             # z, but needed for multiplication
                 # Update sensor readout
+        l = [msg.pose.pose.orientation.x,
+            msg.pose.pose.orientation.y,
+            msg.pose.pose.orientation.z,
+            msg.pose.pose.orientation.w]
+
+        thetas = quaternion_to_euler(l)
+
         snrVectEncoders = np.array([[msg.pose.pose.position.x, 
                                     msg.pose.pose.position.y, 
-                                    msg.pose.pose.orientation.w]]).T
+                                    thetas[0]]]).T
         # Update time
         self.updateDt()
-        self.dt = 0.025
+        # In case negative, skip integration
+        if  self.dt <= 0:
+            return
         # System dynamics
         self.updateA()
 

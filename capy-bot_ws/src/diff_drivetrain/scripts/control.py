@@ -4,6 +4,25 @@ import numpy as np
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Pose2D
 from nav_msgs.msg import Odometry
+import math
+
+def quaternion_to_euler(q):
+    #Get quaternion
+    (x, y, z, w) = (q[0], q[1], q[2], q[3])
+
+    #Calculate angles
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll = math.atan2(t0, t1)
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch = math.asin(t2)
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw = math.atan2(t3, t4)
+    
+    return [yaw, pitch, roll] 
 
 class PoseControl:
     def __init__(self, threshold , repsInSec = 25):
@@ -54,7 +73,7 @@ class PoseControl:
                 self.r*np.sin(self.sensorVect[2,0])/2 - self.h*self.r*np.cos(self.sensorVect[2,0])/self.d]])
 
         K = np.array([  [0.12, 0.0], 
-                        [0.0, 0.24]])
+                        [0.0, 0.12]])
 
         # Calculate error
         estado = np.array([[self.sensorVect[0,0], self.sensorVect[1,0]]]).T
@@ -62,9 +81,8 @@ class PoseControl:
 
         # Stop if we are near the objective
 
-        if self.isRobotClose():
+        if self.isRobotClose() < self.threshold:
             # print("----------LLEGO-------")
-            
             self.pub_wr.publish(0.0)
             self.pub_wl.publish(0.0)
             return
@@ -84,16 +102,16 @@ class PoseControl:
             u[1, 0] = 8
 
         # Min vel wr
-        if (0.2 < u[0, 0] < 1.5):
-            u[0, 0] = 1.5
-        elif (-1.5 < u[0, 0] < -0.2):
-            u[0, 0] = -1.5
+        if (0.05 < u[0, 0] < 0.3):
+            u[0, 0] = 0.3
+        elif (-0.25 < u[0, 0] < -0.05):
+            u[0, 0] = -0.25
         
         # Min vel wl
-        if (0.2 < u[1, 0] < 1.5):
-            u[1, 0] = 1.5
-        elif (-1.5 < u[1, 0] < -0.2):
-            u[1, 0] = -1.5
+        if (0.05 < u[1, 0] < 0.3):
+            u[1, 0] = 0.3
+        elif (-0.25 < u[1, 0] < -0.05):
+            u[1, 0] = -0.25
 
         self.pub_wr.publish(u[0, 0])
         self.pub_wl.publish(u[1, 0])
@@ -105,12 +123,20 @@ class PoseControl:
     def get_poseRobot(self, msg):
         self.sensorVect[0, 0] = msg.pose.pose.position.x
         self.sensorVect[1, 0] = msg.pose.pose.position.y 
-        self.sensorVect[2, 0] = msg.pose.pose.orientation.w 
+        # Convert from quaterions to euler 
+        l = [msg.pose.pose.orientation.x,
+             msg.pose.pose.orientation.y,
+             msg.pose.pose.orientation.z,
+             msg.pose.pose.orientation.w]
+        eulerAngles = quaternion_to_euler(l)
+        self.sensorVect[2, 0] = eulerAngles[0]
     
     def isRobotClose(self):
-        x = self.q_deseada[0,0] - self.threshold < self.sensorVect[0,0] <  self.q_deseada[0,0] + self.threshold
-        y = self.q_deseada[1,0] - self.threshold < self.sensorVect[1,0] <  self.q_deseada[1,0] + self.threshold
-        return x and y
+        #x = self.q_deseada[0,0] - self.threshold < self.sensorVect[0,0] <  self.q_deseada[0,0] + self.threshold
+        #y = self.q_deseada[1,0] - self.threshold < self.sensorVect[1,0] <  self.q_deseada[1,0] + self.threshold
+        #return x and y
+        d = np.sqrt(pow((self.q_deseada[0,0] - self.sensorVect[0,0]), 2) + pow((self.q_deseada[1,0] - self.sensorVect[1,0]), 2))
+        return d
 
     def stop(self):
         # Set deseada as actual

@@ -7,6 +7,22 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose2D
 
 
+def euler2quaternion(e):
+    # Euler should be formated as
+        # yaw
+        # pitch
+        # roll
+    res = [0, 0, 0, 0]
+
+    cy = np.cos(e[0] * 0.5)
+    sy = np.sin(e[0] * 0.5)
+
+    res[0] = cy         # w
+    res[1] = 0.0        # x
+    res[2] = 0.0        # y
+    res[3] = sy         # z
+    return res
+
 class OdometryRover:
     # Static variables
     PI = 3.1416
@@ -45,17 +61,9 @@ class OdometryRover:
             # 0, but needed for multiplication
         self.sensorVect = np.array([[0.0, 0.0]]).T
 
+        self.P = np.array([[0.0, 0.0, 0.0]]).T
+
         self.u = np.array([[0.0, 0.0]]).T
-
-        # Integration for robot pose
-            # We asume 0 as start
-            # This is actually odom
-        self.p = Odometry()
-        self.p.header.frame_id = "world"
-        self.p.pose.pose.position.x = 0
-        self.p.pose.pose.position.y = 0
-        self.p.pose.pose.orientation.w = 0 #Odometry.PI/2 TODO: Try alternative
-
 
         # To adjust our angle:
         self.adj = np.array([[1.0, 1.0, 1.0]]).T
@@ -84,11 +92,11 @@ class OdometryRover:
         
         # Transformation matrix 
         dMatrix = np.array([
-            [self.r*np.cos(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d, 
-                self.r*np.cos(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.sin(self.p.pose.pose.orientation.w)/self.d],
+            [self.r*np.cos(self.P[2,0])/2 - self.h*self.r*np.sin(self.P[2,0])/self.d, 
+                self.r*np.cos(self.P[2,0])/2 + self.h*self.r*np.sin(self.P[2,0])/self.d],
 
-            [self.r*np.sin(self.p.pose.pose.orientation.w)/2 + self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d, 
-                self.r*np.sin(self.p.pose.pose.orientation.w)/2 - self.h*self.r*np.cos(self.p.pose.pose.orientation.w)/self.d],
+            [self.r*np.sin(self.P[2,0])/2 + self.h*self.r*np.cos(self.P[2,0])/self.d, 
+                self.r*np.sin(self.P[2,0])/2 - self.h*self.r*np.cos(self.P[2,0])/self.d],
 
             [self.r/self.d, 
                 -self.r/self.d]])
@@ -100,17 +108,29 @@ class OdometryRover:
 
         # Update the actual stimation
             # Ideally, this should be the same as the time we run the program on the STM32
-        self.p.pose.pose.position.x = self.p.pose.pose.position.x + thisIteration[0, 0] * self.dt
-        self.p.pose.pose.position.y = self.p.pose.pose.position.y + thisIteration[1, 0] * self.dt
-        self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w + thisIteration[2, 0] *self.dt
+        self.P[0,0] = self.P[0,0] + thisIteration[0, 0] * self.dt
+        self.P[1,0] = self.P[1,0] + thisIteration[1, 0] * self.dt
+        self.P[2,0] = self.P[2,0] + thisIteration[2, 0] * self.dt
+
+        msg = Odometry()
+        msg.header.frame_id = "world"
+        msg.pose.pose.position.x = self.P[0, 0]
+        msg.pose.pose.position.y = self.P[1, 0]
+
+        q = euler2quaternion([self.P[2, 0], 0.0, 0.0])
+
+        msg.pose.pose.orientation.x = q[0]
+        msg.pose.pose.orientation.y = q[1]
+        msg.pose.pose.orientation.z = q[2]
+        msg.pose.pose.orientation.w = q[3] #Odometry.PI/2 TODO: Try alternative
 
         # Limit pose angle
         # self.p.pose.pose.orientation.w = self.p.pose.pose.orientation.w%(2*OdometryRover.PI)
         # Update time
-        self.p.header.stamp = rospy.Time.now()
+        msg.header.stamp = rospy.Time.now()
 
         # Send pose
-        self.pub_pose.publish(self.p)
+        self.pub_pose.publish(msg)
     
 if __name__ == "__main__":
     odom = OdometryRover()
