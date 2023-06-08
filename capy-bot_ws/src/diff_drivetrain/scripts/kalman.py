@@ -222,9 +222,9 @@ class KalmanOdometry:
         # Aka R
             # Covariance from sensor input
             # This one is only applied t
-        visualOdom_Cov_Mat = np.array([ [1.0, 0.0, 0.0], 
-                                        [0.0, 1.0, 0.0],
-                                        [0.0, 0.0, 0.5]]) 
+        visualOdom_Cov_Mat = np.array([ [0.5, 0.0, 0.0], 
+                                        [0.0, 0.5, 0.0],
+                                        [0.0, 0.0, 0.3]]) 
         
         # Update prediction 
         self.xP = self.xP + self.dt*( 

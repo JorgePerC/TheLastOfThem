@@ -2,7 +2,7 @@
 import rospy
 import numpy as np
 from std_msgs.msg import Float32
-from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import Pose2D, PoseStamped
 from nav_msgs.msg import Odometry
 import math
 
@@ -30,7 +30,8 @@ class PoseControl:
         rospy.loginfo("Starting PoseControl as control")
         
         # ===== Subscribers =====
-        self.sub_pose = rospy.Subscriber("/robot/kalmanPose", Odometry, self.get_poseRobot)
+        #self.sub_pose = rospy.Subscriber("/robot/kalmanPose", Odometry, self.get_poseRobot)
+        self.sub_pose = rospy.Subscriber("/slam_out_pose", PoseStamped, self.get_poseRobot)
         self.sub_poseD = rospy.Subscriber("/robot/objective", Pose2D, self.get_poseDeseada)
 
         # ===== Publishers =====
@@ -120,14 +121,14 @@ class PoseControl:
         self.q_deseada[0, 0] = msg.x
         self.q_deseada[1, 0] = msg.y 
 
-    def get_poseRobot(self, msg):
-        self.sensorVect[0, 0] = msg.pose.pose.position.x
-        self.sensorVect[1, 0] = msg.pose.pose.position.y 
+    def get_poseRobot(self, msg): # I changed something hehe
+        self.sensorVect[0, 0] = msg.pose.position.x
+        self.sensorVect[1, 0] = msg.pose.position.y 
         # Convert from quaterions to euler 
-        l = [msg.pose.pose.orientation.x,
-             msg.pose.pose.orientation.y,
-             msg.pose.pose.orientation.z,
-             msg.pose.pose.orientation.w]
+        l = [msg.pose.orientation.x,
+             msg.pose.orientation.y,
+             msg.pose.orientation.z,
+             msg.pose.orientation.w]
         eulerAngles = quaternion_to_euler(l)
         self.sensorVect[2, 0] = eulerAngles[0]
     

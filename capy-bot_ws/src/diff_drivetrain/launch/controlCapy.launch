@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-    <!-- ===== Add .yamls to the parameter server ===== -->
-    <rosparam command="load" file="$(find diff_drivetrain)/config/robotConstants.yaml"/>
+    <!-- ===== Rpilidar node ===== -->
+    <include file="$(find rplidar_ros)/launch/rplidar_a1.launch"/>
+
+    <!-- ===== Hector slam, mapping and odometry ===== -->
+    <include file="$(find hector_slam_launch)/launch/tutorial.launch"/>
 
     <!-- ===== Launch Rosserial ===== -->
     <node name="serial_ros" pkg="rosserial_python" type="serial_node.py" output="screen">
@@ -9,10 +12,10 @@
         <param name="baud"              type="int"                  value="115200"/>
     </node>
 
-    <!-- ===== Launch Odometry Node ===== -->
-    <node name="odom" pkg="diff_drivetrain" type="odometry.py" output="screen"/>
-    <!-- <node name="gyro" pkg="mpu_6050_driver" type="imu_node.py" output="screen"/> -->
-    <node name="kalman" pkg="diff_drivetrain" type="kalman.py" output="screen"/>
+    <!-- ===== Add .yamls to the parameter server ===== -->
+    <rosparam command="load" file="$(find diff_drivetrain)/config/robotConstants.yaml"/>
+
+    <!-- ===== Launch Position Control Node ===== -->
     <node name="control" pkg="diff_drivetrain" type="control.py" output="screen"/>
     
 
