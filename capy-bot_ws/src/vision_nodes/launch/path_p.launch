@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<!--Llave principal-->
+<launch>
+
+  <!--Nodo1: Particula de RViz-->
+  <node name="path_planning" pkg="vision_nodes" type="path_planning.py" output="screen"/>
+
+</launch>
