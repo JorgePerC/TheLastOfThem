@@ -78,7 +78,7 @@ class Branch():
       nodo = Node(len(self.nodes), p_new) 
 
       #Heredar camino al origen
-      nodo.path = self.nodes[index].path.copy()
+      nodo.path = self.nodes[index].path[:]
       nodo.path.append(len(self.nodes))
 
       #Agregar nodo a rama
@@ -107,6 +107,7 @@ class RRT():
     self.Bt = None
 
   #Distancia euclidiana
+  @staticmethod
   def euc(p1, p2):
 
     d = np.sqrt(np.power(p1[0,0] - p2[0,0], 2) + np.power(p1[0,1] - p2[0, 1], 2))
@@ -114,6 +115,7 @@ class RRT():
     return d
 
   #Extrapolar puntos
+  @staticmethod
   def extrapolate(p1, p2, d):
 
     #Calcular deltas
@@ -208,6 +210,7 @@ class RRT():
     return np.array(Et)
 
   #Detectar colisiones entre puntos
+  @staticmethod
   def det_collision(p1, p2, obs, sec):
 
     #Calcular lineas
@@ -291,13 +294,17 @@ def map2obs(map_msg, thresh):
   obs = []
 
   # Iterar sobre celdas de mapa
-  for i in range(len(map_msg.grid)):
+  for i in range(len(map_msg.data)):
 
     # Verificar threshold de probabilidad
-    if(map_msg.grid[i].prob.data > thresh):
+    if(map_msg.data[i] > thresh):
+      
+      # Obtener punto en m
+      x = map_msg.info.resolution * (i % map_msg.info.width) + map_msg.info.origin.position.x
+      y = map_msg.info.resolution * (i // map_msg.info.width) + map_msg.info.origin.position.y
       
       # Generar obstaculo
-      ob = np.array([[map_msg.grid[i].position.x, map_msg.grid[i].position.y, 0.0]])
+      ob = np.array([[x, y, 0.0]])
 
       # Agregar a lista de obstaculos
       obs.append(ob)
@@ -310,7 +317,7 @@ def array2rviz(array, marker, scale, color, time):
   # Inicializar mensaje de RViz
   marker_rviz = Marker()
   marker_rviz.header.stamp = time
-  marker_rviz.header.frame_id = "world"
+  marker_rviz.header.frame_id = "map"
   marker_rviz.type = marker
 
   # Definir escala

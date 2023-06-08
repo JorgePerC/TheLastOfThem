@@ -34,6 +34,6 @@ catkin_python_setup()
 #RetinaFace
 catkin_install_python(PROGRAMS src/basic_node.py src/point_cloud.py
  src/pcloud_node.py src/occupacy_grid.py src/laser_map.py
- src/traj_generator.py
+ src/traj_generator.py src/path_planning.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
