@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<!--Llave principal-->
+<launch>
+
+  <!--Nodo1: Particula de RViz-->
+  <node name="exploration" pkg="vision_nodes" type="Exploration.py" output="screen"/>
+
+</launch>

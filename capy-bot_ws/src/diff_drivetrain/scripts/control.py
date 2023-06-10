@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import numpy as np
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Bool
 from geometry_msgs.msg import Pose2D, PoseStamped
 from nav_msgs.msg import Odometry
 import math
@@ -37,6 +37,7 @@ class PoseControl:
         # ===== Publishers =====
         self.pub_wl = rospy.Publisher("/robot/set_wl", Float32, queue_size=5)
         self.pub_wr = rospy.Publisher("/robot/set_wr", Float32, queue_size=5)
+        self.pub_goal = rospy.Publisher("/robot/bool", Bool, queue_size = 5)
         
         # # ===== Rate =====
         self.rate = rospy.Rate(repsInSec)
@@ -83,24 +84,25 @@ class PoseControl:
         # Stop if we are near the objective
 
         if self.isRobotClose() < self.threshold:
-            # print("----------LLEGO-------")
+            #print("----------LLEGO-------")
             self.pub_wr.publish(0.0)
             self.pub_wl.publish(0.0)
+            self.pub_goal.publish(True)
             return
         # Calculate control 
         u = np.matmul(np.linalg.inv(dMatrix),
                         #self.q_deseada_punto + # We ignore this bc: we don't want to finish in an specific velocity
                         np.dot(K, error))
         # Limit control wr
-        if (u[0, 0] < -8):
-            u[0, 0] = -8
-        elif (u[0, 0] > 8):
-            u[0, 0] = 8
+        if (u[0, 0] < -4):
+            u[0, 0] = -4
+        elif (u[0, 0] > 4):
+            u[0, 0] = 4
         # Limit control wl
-        if (u[1, 0] < -8):
-            u[1, 0] = -8
-        elif (u[1, 0] > 8):
-            u[1, 0] = 8
+        if (u[1, 0] < -4):
+            u[1, 0] = -4
+        elif (u[1, 0] > 4):
+            u[1, 0] = 4
 
         # Min vel wr
         if (0.05 < u[0, 0] < 0.3):
@@ -147,7 +149,7 @@ class PoseControl:
     
 if __name__ == "__main__":
         # 3 cm threshold
-    control = PoseControl(threshold= 0.05, repsInSec = 40)
+    control = PoseControl(threshold= 0.1, repsInSec = 40)
     while not rospy.is_shutdown():
         control.run_control()
         control.rate.sleep()

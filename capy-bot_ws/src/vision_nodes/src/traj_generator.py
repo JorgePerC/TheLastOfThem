@@ -57,7 +57,6 @@ class Traj_gen:
 
     # Empty path
     self.Et = []
-
     rospy.spin()
 
   # Callback de mapa de ocupacion
@@ -65,44 +64,45 @@ class Traj_gen:
     
     # Convertir obstaculos a arreglo de numpy
     obs = map2obs(map_msg, 75)
-
-    if (self.recalc_trajectory or self.new_traj_flag):
-
-      # Parametros del generador
-      start = np.array([self.p_start])
-      target = np.array([self.p_end])
-
-      # Calcular trayectoria
-      self.Et = self.traj_gen.gen_traj(start, target, np.array(obs)[:,0,0:2])
-      if self.Et.shape[0] > 0:
-        self.Et = self.traj_gen.simplify_trajectory(self.Et, np.array(obs)[:,0,0:2])
-        self.recalc_trajectory = False
+    if len(obs) > 0:
+      if (self.recalc_trajectory or self.new_traj_flag):
+        
         self.new_traj_flag = False
         self.flag_pub.publish(not self.new_traj_flag)
-    
-    else:
+        
+        # Parametros del generador
+        start = np.array([self.p_start])
+        target = np.array([self.p_end])
 
-      # Verificar si trayectoria calculada no tiene colisiones
-      coll = check_trajectory(self.Et, obs, self.sec)
+        # Calcular trayectoria
+        self.Et = self.traj_gen.gen_traj(start, target, np.array(obs)[:,0,0:2])
+        if self.Et.shape[0] > 0:
+          self.Et = self.traj_gen.simplify_trajectory(self.Et, np.array(obs)[:,0,0:2])
+          self.recalc_trajectory = False
+      
+      else:
 
-      if (coll):
-        self.recalc_trajectory = True
+        # Verificar si trayectoria calculada no tiene colisiones
+        coll = check_trajectory(self.Et, obs, self.sec)
 
-    # Convertir obstaculos y trayectoria en mensaje de rviz
-    obs_rviz = array2rviz(obs, 7, [0.1, 0.1, 0.1], [1.0, 0.0, 0.0, 0.7], rospy.Time.now())
-    path_rviz = array2rviz(self.Et, 4, [0.1, 0.0, 0.0], [1.0, 1.0, 1.0, 0.7], rospy.Time.now())
-    
-    # Publicar trayectoria
-    path_msg = Path()
-    path_msg.header.stamp = rospy.Time.now()
-    path_msg.path = path_rviz.points
+        if (coll):
+          self.recalc_trajectory = True
 
-    # Publicar mensaje
-    self.obs_pub.publish(obs_rviz)
+      # Convertir obstaculos y trayectoria en mensaje de rviz
+      obs_rviz = array2rviz(obs, 7, [0.1, 0.1, 0.1], [1.0, 0.0, 0.0, 0.7], rospy.Time.now())
+      path_rviz = array2rviz(self.Et, 4, [0.1, 0.0, 0.0], [1.0, 1.0, 1.0, 0.7], rospy.Time.now())
+      
+      # Publicar trayectoria
+      path_msg = Path()
+      path_msg.header.stamp = rospy.Time.now()
+      path_msg.path = path_rviz.points
 
-    # Publicar trayectoria en rviz
-    self.traj_pub.publish(path_rviz)
-    self.path_pub.publish(path_msg)
+      # Publicar mensaje
+      self.obs_pub.publish(obs_rviz)
+
+      # Publicar trayectoria en rviz
+      self.traj_pub.publish(path_rviz)
+      self.path_pub.publish(path_msg)
 
     #print("Obstaculos encontrados: " + str(len(obs)))
 
