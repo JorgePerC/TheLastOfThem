@@ -2,7 +2,7 @@
 
 import rospy
 import numpy as np
-from geometry_msgs.msg import Pose2D, Point
+from geometry_msgs.msg import Pose2D, PoseStamped
 from custom_msgs.msg import Path
 from std_msgs.msg import Bool
 
@@ -15,6 +15,7 @@ class PointsArray:
         self.sub_points = rospy.Subscriber("/trajectory_gen/path_msg", Path, self.get_points)
         self.sub_bool = rospy.Subscriber("/robot/bool", Bool, self.get_bool)
         self.sub_traj_flag = rospy.Subscriber("/trajectory_gen/new_traj", Bool, self.get_traj_flag)
+        self.sub_pose = rospy.Subscriber("/slam_out_pose", PoseStamped, self.poseCallback)
         
         #Publisher
         self.pub_point = rospy.Publisher("/robot/objective", Pose2D, queue_size=5)
@@ -32,6 +33,7 @@ class PointsArray:
         self.flag = True
         self.traj_flag = True
         self.path_flag = False
+        self.poseRobot = PoseStamped()
     
     def pathPlanning(self):
         
@@ -45,7 +47,14 @@ class PointsArray:
             print(self.Points.pop(0))
             self.flag = False
             self.pub_flag.publish(self.flag) 
-            #self.pub_goal.publish(False)        
+            #self.pub_goal.publish(False)    
+        if not self.Points:
+            self.pose = Pose2D()
+            self.pose.x = self.poseRobot.pose.position.x
+            self.pose.y = self.poseRobot.pose.position.y
+            self.pose.theta = 0
+            self.pub_point.publish(self.pose)
+
 
         #elif self.flag and not self.Points:
             #self.pub_goal.publish(True)
@@ -63,6 +72,9 @@ class PointsArray:
     
     def get_traj_flag(self, msg):
         self.traj_flag = msg.data
+    
+    def poseCallback(self, pose_msg):
+        self.poseRobot = pose_msg
 
 if __name__ == '__main__':
     Plan = PointsArray(repsInSec=25)

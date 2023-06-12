@@ -55,23 +55,28 @@ class HeatMap():
         self.sendPoint()
 
         # Rate
-        self.rate = rospy.Rate(20)
+        self.rate = rospy.Rate(5)
 
     def sendPoint(self):
-        msg = Pose2D()
-        msg.x = self.grid[self.idxGrid][0][0]
-        msg.y = self.grid[self.idxGrid][0][1]
-        msg.theta = 0
-        # If point is 00, ignore
-        #if self.grid[self.idxGrid][0][0] == 0 and self.grid[self.idxGrid][0][0] == 0:
-            #return
-        print(msg.x, msg.y)
-        print(self.idxGrid)
-        self.point_pub.publish(msg)
-        self.hasRecievedRRT = False
+        if self.idxGrid < pow(self.dim_grid,2):
+            msg = Pose2D()
+            msg.x = self.grid[self.idxGrid][0][0]
+            msg.y = self.grid[self.idxGrid][0][1]
+            msg.theta = 0
+            # If point is 00, ignore
+            #if self.grid[self.idxGrid][0][0] == 0 and self.grid[self.idxGrid][0][0] == 0:
+                #return
+            print(msg.x, msg.y)
+            print(self.idxGrid)
+            self.point_pub.publish(msg)
+            self.hasRecievedRRT = False
 
     def robotIsClose(self):
         distance = np.sqrt(pow((self.robot_pose.pose.position.x - self.grid[self.idxGrid][0][0]),2) +  pow((self.robot_pose.pose.position.y - self.grid[self.idxGrid][0][1]),2))
+        print("_____________________")
+        print("pose robot: ", self.robot_pose.pose.position)
+        print("Going to: ", self.grid[self.idxGrid])
+        print("Distance: ", distance)
         return distance < 0.1
         
     def main(self):
@@ -91,11 +96,13 @@ class HeatMap():
                     # Save reading 
                     self.heat_rviz.markers[self.idxGrid].color.r = (-2.0*self.signal/255.0)
                     print("Reading: ", self.signal)
+                    print("*******Tome lectura******")
                     # Also send new point
                     self.idxGrid = self.idxGrid + 1
                     self.sendPoint()
             # If there is no path to our idx, increment it
-            if (self.hasRecievedRRT and len(self.path.path) == 0):
+            elif (self.hasRecievedRRT and len(self.path.path) == 0):
+                print("No path found")
                 self.idxGrid = self.idxGrid + 1
                 self.sendPoint()
 
