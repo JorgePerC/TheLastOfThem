@@ -14,8 +14,6 @@ Our final project in university.
 @ Josue Mojica
 @ Jorge Pérez
 
-Owen nos la pela
-
 
 ## Some dependencies: 
 
