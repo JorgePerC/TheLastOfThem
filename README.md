@@ -15,6 +15,8 @@ Our final project in university. The Capybot allows users to map WiFi signals in
 * Low level control is located in the [CapyWheels repo](https://github.com/JorgePerC/CapyWheels.git)
 * You can check the full documentation under the $/Doc$ folder
 
+### Video demo:
+![Demo](https://m.youtube.com/watch?v=IXs82uq5Nus&feature=share)
 
 ### Authors:
 @ Luis Vaca
