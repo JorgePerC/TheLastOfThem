@@ -74,16 +74,19 @@ class HeatMap():
     def robotIsClose(self):
         distance = np.sqrt(pow((self.robot_pose.pose.position.x - self.grid[self.idxGrid][0][0]),2) +  pow((self.robot_pose.pose.position.y - self.grid[self.idxGrid][0][1]),2))
         print("_____________________")
-        print("pose robot: ", self.robot_pose.pose.position)
-        print("Going to: ", self.grid[self.idxGrid])
+        #print("pose robot: ", self.robot_pose.pose.position)
+        #print("Going to: ", self.grid[self.idxGrid])
         print("Distance: ", distance)
-        return distance < 0.1
+        return distance < 0.2
         
     def main(self):
         while not rospy.is_shutdown():
             self.get_map()
             # Wait if hasn't arrived
             if (self.idxGrid==0 and np.sqrt(pow((self.robot_pose.pose.position.x - 0.0),2) +  pow((self.robot_pose.pose.position.y - 0.0),2)) < 0.1):
+                self.heat_rviz = array2rviz_array(np.array(self.grid), 1, 
+                                   [self.map.info.resolution*self.dim_map/self.dim_grid, self.map.info.resolution*self.dim_map/self.dim_grid, 0.1],
+                                     [1.0, 150.0/255.0, 60.0/255.0, 0.7], rospy.Time.now())
                 self.sendPoint()
             #if (self.idxGrid == 0):
                 #self.sendPoint()
@@ -106,17 +109,14 @@ class HeatMap():
                 self.idxGrid = self.idxGrid + 1
                 self.sendPoint()
 
-            # Always display heatmap   
-            self.heat_rviz = array2rviz_array(np.array(self.grid), 1, 
-                                   [self.map.info.resolution*self.dim_map/self.dim_grid, self.map.info.resolution*self.dim_map/self.dim_grid, 0.1],
-                                     [1.0, 150.0/255.0, 60.0/255.0, 0.7], rospy.Time.now())
-            
+            # Always display heatmap              
             self.heat_map_pub.publish(self.heat_rviz)
 
             # Do while-ish
                 # End if we have sent all the points
                 # Or master is shutdown
             if self.idxGrid == len(self.grid)**2 :
+                print("Finished exploring")
                 break
             self.rate.sleep()
 
@@ -136,7 +136,7 @@ class HeatMap():
         self.dim_map = map_msg.info.width
     
     def signalCallback(self, signal_msg):
-        self.signal = signal_msg
+        self.signal = signal_msg.data
 
     def pathCallback(self, path_msg):
         self.path = path_msg

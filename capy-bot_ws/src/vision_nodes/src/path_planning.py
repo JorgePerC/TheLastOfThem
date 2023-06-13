@@ -6,78 +6,100 @@ from geometry_msgs.msg import Pose2D, PoseStamped
 from custom_msgs.msg import Path
 from std_msgs.msg import Bool
 
+
 class PointsArray:
     def __init__(self, repsInSec = 25):
         rospy.init_node("pathPlannig")
         rospy.loginfo("Start Path Planning, expecting array of points and publishing when finish")
 
         #Subscribers
+            # Get path points
         self.sub_points = rospy.Subscriber("/trajectory_gen/path_msg", Path, self.get_points)
-        self.sub_bool = rospy.Subscriber("/robot/bool", Bool, self.get_bool)
-        self.sub_traj_flag = rospy.Subscriber("/trajectory_gen/new_traj", Bool, self.get_traj_flag)
-        self.sub_pose = rospy.Subscriber("/slam_out_pose", PoseStamped, self.poseCallback)
-        
+            # Get control feedback
+        self.sub_control = rospy.Subscriber("/robot/isAtTarget", Bool, self.get_controlFlag)
+            # Get robot pose
+        self.sub_pose =  rospy.Subscriber("/slam_out_pose", PoseStamped, self.get_robotPose)
+            # To know when there's a new path
+        self.sub_hasNewTraj = rospy.Subscriber("/trajectory_gen/new_traj", Bool, self.get_newTrajFlag)
+            # Also, send that it has been updated
+        self.pub_newTraj = rospy.Publisher("/trajectory_gen/new_traj", Bool, queue_size=1)
         #Publisher
-        self.pub_point = rospy.Publisher("/robot/objective", Pose2D, queue_size=5)
-
+            # For control node
+        self.pub_objective = rospy.Publisher("/robot/objective", Pose2D, queue_size=5)
         #Flags
-        self.pub_goal = rospy.Publisher("/robot/path_ended", Bool, queue_size=1)
-        self.pub_flag = rospy.Publisher("/robot/bool", Bool, queue_size=1)
-        self.pub_traj_flag = rospy.Publisher("/trajectory_gen/new_traj", Bool, queue_size=1)
-
-        #Rate
-        self.rate = rospy.Rate(repsInSec)
+        self.f_ctrlEnd = True
+        self.f_hasNewTraj = True
+        
 
         # Variables
         self.Points = []
-        self.flag = True
-        self.traj_flag = True
+        
         self.path_flag = False
-        self.poseRobot = PoseStamped()
+        # Robot
+        self.poseRobot = Pose2D()
+        self.poseDeseasa = Pose2D()
+        #Rate
+        self.rate = rospy.Rate(repsInSec)
+
+    def robotIsClose(self):
+        distance = np.sqrt(pow((self.poseRobot.x - self.poseDeseasa.x),2) +  pow((self.poseRobot.y - self.poseDeseasa.y),2))
+        print("_____________________")
+        print("Distance: ", distance)
+        return distance < 0.1
     
     def pathPlanning(self):
+        # If control hasn't reached the point
+        # Do nothing 
+        if not(self.f_ctrlEnd):
+            return
         
+        # First check if there are no points in 
+        # new trayectory or in the desired one.
+        if len(self.Points) == 0:
+            self.poseDeseasa.x = self.poseRobot.x
+            self.poseDeseasa.y = self.poseRobot.y
+            self.poseDeseasa.theta = 0
+            
+            print("No more points, robot at: ", self.poseRobot)
+            # Prepare itself, to recieve new paths
+            self.pub_newTraj.publish(True)
+            # This should be updated by the same node
+            #hasNewTraj = True
+        # else send next point
+        else:
+            # Rewrite pose deseada and resent it
+            sendMe = self.Points.pop(0)
+            # Como llega points
+            self.poseDeseasa.x = sendMe.x
+            self.poseDeseasa.y = sendMe.y
+            self.poseDeseasa.theta = 0
 
-        if self.flag and self.Points:
-            self.pose = Pose2D()
-            self.pose.x = self.Points[0].x
-            self.pose.y = self.Points[0].y
-            self.pose.theta = 0
-            self.pub_point.publish(self.pose)
-            print(self.Points.pop(0))
-            self.flag = False
-            self.pub_flag.publish(self.flag) 
-            #self.pub_goal.publish(False)    
-        if not self.Points:
-            self.pose = Pose2D()
-            self.pose.x = self.poseRobot.pose.position.x
-            self.pose.y = self.poseRobot.pose.position.y
-            self.pose.theta = 0
-            self.pub_point.publish(self.pose)
+            self.pub_objective.publish(self.poseDeseasa)
 
-
-        #elif self.flag and not self.Points:
-            #self.pub_goal.publish(True)
-
-
+            print(sendMe)
+    
+    # This callback executes when 
     def get_points(self, msg):
-        if self.traj_flag:
+        if self.f_hasNewTraj:
             self.Points = msg.path
-            self.traj_flag = False
-            self.pub_traj_flag.publish(self.traj_flag)
+            self.f_hasNewTraj = False
+            self.pub_newTraj.publish(False)
 
-
-    def get_bool(self, msg):
-        self.flag = msg.data
+    def get_newTrajFlag(self, msg):
+        self.f_hasNewTraj = msg.data
+    #
+    def get_controlFlag(self, msg):
+        # Each time the control ends, it will publish so in here
+        self.f_ctrlEnd = msg.data
     
-    def get_traj_flag(self, msg):
-        self.traj_flag = msg.data
     
-    def poseCallback(self, pose_msg):
-        self.poseRobot = pose_msg
+    def get_robotPose(self, pose_msg):
+        self.poseRobot.x = pose_msg.pose.position.x
+        self.poseRobot.y = pose_msg.pose.position.y
+        # No theta
 
 if __name__ == '__main__':
-    Plan = PointsArray(repsInSec=25)
+    Plan = PointsArray(repsInSec = 5)
     while not rospy.is_shutdown():
         Plan.pathPlanning()
         Plan.rate.sleep()

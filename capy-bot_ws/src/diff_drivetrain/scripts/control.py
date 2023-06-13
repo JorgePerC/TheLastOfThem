@@ -37,7 +37,7 @@ class PoseControl:
         # ===== Publishers =====
         self.pub_wl = rospy.Publisher("/robot/set_wl", Float32, queue_size=5)
         self.pub_wr = rospy.Publisher("/robot/set_wr", Float32, queue_size=5)
-        self.pub_goal = rospy.Publisher("/robot/bool", Bool, queue_size = 5)
+        self.pub_isAtGoal = rospy.Publisher("/robot/isAtTarget", Bool, queue_size = 5) # this was at /robot/bool
         
         # # ===== Rate =====
         self.rate = rospy.Rate(repsInSec)
@@ -79,15 +79,15 @@ class PoseControl:
 
         # Calculate error
         estado = np.array([[self.sensorVect[0,0], self.sensorVect[1,0]]]).T
+        #print(self.q_deseada, estado)
         error = self.q_deseada - estado 
 
         # Stop if we are near the objective
 
         if self.isRobotClose() < self.threshold:
             #print("----------LLEGO-------")
-            self.pub_wr.publish(0.0)
-            self.pub_wl.publish(0.0)
-            self.pub_goal.publish(True)
+            self.stop()
+            self.pub_isAtGoal.publish(True)
             return
         # Calculate control 
         u = np.matmul(np.linalg.inv(dMatrix),
@@ -118,6 +118,7 @@ class PoseControl:
 
         self.pub_wr.publish(u[0, 0])
         self.pub_wl.publish(u[1, 0])
+        self.pub_isAtGoal.publish(False)
         
     def get_poseDeseada(self, msg):
         self.q_deseada[0, 0] = msg.x
@@ -143,8 +144,13 @@ class PoseControl:
 
     def stop(self):
         # Set deseada as actual
-        self.q_deseada = self.sensorVect.copy()
-        rospy.loginfo("Ended control")
+        # self.q_deseada[0, 0] = self.sensorVect[0, 0]
+        # self.q_deseada[1, 0] = self.sensorVect[1, 0]
+        #self.q_deseada = self.sensorVect.copy()
+        # Send velocidad 0 to motores
+        self.pub_wr.publish(0.0)
+        self.pub_wl.publish(0.0)
+        #rospy.loginfo("Reached position")
 
     
 if __name__ == "__main__":
@@ -153,3 +159,4 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         control.run_control()
         control.rate.sleep()
+    rospy.loginfo("Killed control")
