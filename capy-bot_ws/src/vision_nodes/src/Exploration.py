@@ -19,7 +19,7 @@ class NewHorizon:
         self.probObs = 75 #rospy.get_param("/visionNodes/threshold", 75)
 
         self.k = np.ones((3,3),np.uint8)
-        self.shouldSend = False
+        self.shouldSend = True
 
         self.points_pub = rospy.Publisher("/robot/human/reference", Pose2D, queue_size=10)
     
@@ -53,6 +53,11 @@ class NewHorizon:
         mask = cv.bitwise_xor(obsMask, prev)
 
         mask = cv.dilate(mask, self.k, iterations = 2)
+
+        up = cv.vconcat([obsMask, unkwonMask])
+        down = cv.vconcat([knowMask, mask])
+
+        dx = cv.hconcat([up, down])
         # Find countours
         contours, hierarchy = cv.findContours(mask, method=cv.CHAIN_APPROX_SIMPLE, mode=cv.RETR_EXTERNAL)[-2:]
 
@@ -78,16 +83,17 @@ class NewHorizon:
             points.append([cX, cY])
         
         # There is no point to sent
-        if len(points) == 0:
-            return
+        # if len(points) == 0:
+        #     return
         
-        send = Pose2D
-        send.x = points[0][0]
-        send.y = points[0][1]
-        send.theta = 0
-        self.points_pub.publish(send)
+        # send = Pose2D
+        # send.x = points[0][0]
+        # send.y = points[0][1]
+        # send.theta = 0
+        # self.points_pub.publish(send)
         cv.imshow("try", result)
         cv.waitKey(0)
+        cv.destroyAllWindows()
 
 if __name__ == "__main__":
     name_node = NewHorizon()
