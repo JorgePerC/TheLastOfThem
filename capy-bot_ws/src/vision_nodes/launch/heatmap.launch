@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<!--Llave principal-->
+<launch>
+
+  <!--node name="signal_reader" pkg="wifi_reader" type="wifi_reader.py" output="screen"-->
+  <node name="heatmap" pkg="vision_nodes" type="heatmap.py" output="screen"/>
+
+</launch>

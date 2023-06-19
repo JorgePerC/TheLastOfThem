@@ -3,7 +3,7 @@ import numpy as np
 
 # Importar dependencias de mensajes
 from custom_msgs.msg import GridMap, Cell
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
 
 class Node():
@@ -310,6 +310,41 @@ def map2obs(map_msg, thresh):
       obs.append(ob)
 
   return np.array(obs)
+
+def array2rviz_array(array, marker_type, scale, color, time):
+  #print(array)
+  # Inicializar mensaje de RViz
+  marker_array = MarkerArray()
+  # Iterar sobre arreglo de numpy (arreglo de Nx1x2)
+  for i in range(array.shape[0]):
+    # Inicializar mensaje de RViz
+    marker_rviz = Marker()
+    marker_rviz.header.stamp = time
+    marker_rviz.header.frame_id = "map"
+    marker_rviz.type = marker_type
+
+    # Definir escala
+    marker_rviz.scale.x = scale[0]
+    marker_rviz.scale.y = scale[1]
+    marker_rviz.scale.z = scale[2]
+
+    # Definir color
+    marker_rviz.color.r = color[0]
+    marker_rviz.color.g = color[1]
+    marker_rviz.color.b = color[2]
+    marker_rviz.color.a = color[3]
+
+    # Definir pose
+    marker_rviz.pose.position.x = array[i, 0, 0]
+    marker_rviz.pose.position.y = array[i, 0, 1]
+    marker_rviz.pose.position.z = 0.0
+
+    # Definir id
+    marker_rviz.id = i
+
+    marker_array.markers.append(marker_rviz)
+
+  return marker_array
 
 # Convertir arreglo de puntos en marcadores de rviz
 def array2rviz(array, marker, scale, color, time):

@@ -13,7 +13,7 @@ class NewHorizon:
         rospy.init_node("new_horizon")
         rospy.loginfo("Starting node as new_horizon.")
         rospy.Subscriber("/map", OccupancyGrid, self.createMasks)
-        rospy.Subscriber("/path_ended", Bool, self.get_Flag)
+        rospy.Subscriber("/robot/path_ended", Bool, self.get_Flag)
 
         self.mSize = 128 #rospy.get_param("/hector_mapping/map_size", 128)
         self.probObs = 75 #rospy.get_param("/visionNodes/threshold", 75)

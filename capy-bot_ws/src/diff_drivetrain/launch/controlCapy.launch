@@ -17,6 +17,13 @@
 
     <!-- ===== Launch Position Control Node ===== -->
     <node name="control" pkg="diff_drivetrain" type="control.py" output="screen"/>
+
+    <!-- ===== Launch Trayectory Generator Node ===== -->
+    <include file="$(find vision_nodes)/launch/trajectory_rrt.launch"/>
+
+    <!-- ===== Launch Path Planning Node ===== -->
+    <include file="$(find vision_nodes)/launch/path_p.launch"/>
+
     
 
 </launch>
