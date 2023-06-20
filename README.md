@@ -1,8 +1,8 @@
 # TheLastOfThem
 Our final project in university. The Capybot allows users to map WiFi signals into a 2D space.
 
-![MapWifi]()
-![Capybot]()
+![MapWifi](images/Map.jpeg)
+![Capybot](images/DiCapryo.jpeg)
 
 
 ## What this is about:
@@ -16,7 +16,10 @@ Our final project in university. The Capybot allows users to map WiFi signals in
 * You can check the full documentation under the $/Doc$ folder
 
 ### Video demo:
-![Demo](https://m.youtube.com/watch?v=IXs82uq5Nus&feature=share)
+[![Demo](images/qrCodeVid.jpeg)](https://m.youtube.com/watch?v=IXs82uq5Nus&feature=share)
+
+### Report with solution details:
+[Check full report](images/CapybotReport.pdf)
 
 ### Authors:
 @ Luis Vaca
